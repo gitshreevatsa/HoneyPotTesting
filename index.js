@@ -43,20 +43,34 @@ app.get("/", (req, res) => {
 });
 
 app.get("/:id/:chain", async (req, res) => {
+  // Calling gecko terminal to fetch respective quote token details
   const tokens = await geckoApi(req.params.id, req.params.chain);
 
-  const addressHolders = await addresses(req.params.id, req.params.chain);
-  const ganacheConnect = await ganacheConnection(req.params.chain, addressHolders[0], addressHolders[1]);
-  const web3 = ganacheConnect.web3;
+  // Fetching the base and quote token holders
+  const baseAddressHolders = await addresses(tokens.path[0], req.params.chain);
+  const quoteAddressHolders = await addresses(tokens.path[1], req.params.chain);
+
+  // rechecking the holders
+  console.log(baseAddressHolders, tokens.path[0], "###################################################");
+  console.log(quoteAddressHolders, tokens.path[1], "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+
+  // Connecting to ganache hard fork and unlocking the accounts
+  const ganacheConnect = await ganacheConnection(req.params.chain, baseAddressHolders[2], quoteAddressHolders[2]);
+
+  const web3Instance = ganacheConnect.web3;
   const swapRouterContract = ganacheConnect.swapRouterContract;
+
+  // Populating the accounts with ether and tokens
   await populateEther(
-    web3,
-    addressHolders[0],
-    addressHolders[1],
+    web3Instance,
+    baseAddressHolders[2],
+    quoteAddressHolders[2],
     tokens.path[0],
     tokens.path[1]
   );
-  // tokenTax(web3, swapRouterContract, req.params.id, tokens.path[1], addressHolders[0], addressHolders[1], 1000000000000000000, true, 1000000, 1000000000);
+
+  // Need to test swap : Swaps with router contract functions
+  // await tokenTax(web3, swapRouterContract, tokens.path[0], tokens.path[1], baseAddressHolders[2], quoteAddressHolders[2], 1, true, 1000000, 1000000000);
   res.send("Working");
 });
 

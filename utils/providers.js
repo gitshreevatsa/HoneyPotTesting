@@ -1,3 +1,7 @@
+/**
+ * @dev This file contains the providers for the different networks
+ */
+
 const web3 = require("web3");
 
 const bsc = new web3(

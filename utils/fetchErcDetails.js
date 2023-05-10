@@ -33,9 +33,16 @@ class TokenDetails {
   };
 }
 
+// /**
+//  *
+//  * @param {WEB3} web3 web3 instance
+//  * @param {Address} address token address
+//  * @returns {TokenDetails} token details
+//  */
+
 const fetchTokenDetails = async (web3, address) => {
   const token_address = web3.utils.toChecksumAddress(address);
-
+  // Constructing the ERC contract of a token
   const erc20 = new web3.eth.Contract(
     require("../abi/erc20.json"),
     token_address

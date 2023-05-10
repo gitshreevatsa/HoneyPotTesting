@@ -1,10 +1,9 @@
+/**
+ * @dev This file is used to connect to the ganache network
+ */
+
 const Web3 = require("web3");
 const ganache = require("ganache");
-
-// Exported to use as ganache instance
-// to export the routers contracts
-
-// const web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
 
 const networkOptions = {
   56: "https://thrilling-green-dawn.bsc.discover.quiknode.pro/bfa1dcba97e594cf960398bee14d82229ccd57b9/",
@@ -16,33 +15,32 @@ const routerContract = {
   56: "0x10ED43C718714eb63d5aA57B78B54704E256024E",
   1: "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
 };
-const ganacheConnection = async(network, buy_account, sell_account) => {
-  const USER_ADDRESS = buy_account;
-  const RECIVER_ADDRESS = sell_account;
+
+/**
+ * @dev This function is used to connect to the ganache network to a specific network fork with specific accounts unlocked
+ * @param {Int} network
+ * @param {Address} buy_account
+ * @param {Address} sell_account
+ * @returns {Object} return the web3 Instance and swapRouterContract
+ */
+const ganacheConnection = async (network, buy_account, sell_account) => {
+
   const ETHER_GOD = "0x0000000000000000000000000000000000000000";
-    console.log(buy_account, sell_account, "+++++++++++++++++");
+  console.log(buy_account, sell_account, "--------------------------------");
+  // Choosing the network fork based on the network id
   const options = {
     fork: networkOptions[network],
-    wallet: { unlockedAccounts: [USER_ADDRESS, RECIVER_ADDRESS, ETHER_GOD] },
+    wallet: { unlockedAccounts: [buy_account, sell_account, ETHER_GOD] },
   };
-
+  // Constructing the provider and web3 instance
   const ganacheProvider = ganache.provider(options);
-
   const web3 = new Web3(ganacheProvider);
-
-  const uniswapRouterEth = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
-
-  const pancakeRouterBsc = "0x10ED43C718714eb63d5aA57B78B54704E256024E";
-
+  
+  // Connecting to specific router contract based on network
   const swapRouterContract = new web3.eth.Contract(
     require("./abi/uniswap.json").abi,
     routerContract[network]
   );
-
-  // const pancakeRouterContract = new web3.eth.Contract(
-  //     require("./abi/pancake.json").abi,
-  //     routerContract[network]
-  // );
 
   return { web3, swapRouterContract };
 };

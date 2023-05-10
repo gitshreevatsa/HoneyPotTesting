@@ -1,5 +1,5 @@
 const { fetchTokenDetails, TokenDetails } = require("../utils/fetchErcDetails");
-
+// YET TO WORK ON THIS
 // Test
 // Add error classes
 // figure return types
@@ -7,8 +7,8 @@ const { fetchTokenDetails, TokenDetails } = require("../utils/fetchErcDetails");
 const tokenTax = (
   web3, // web3 instance: ganache hard fork
   router, // router contract
+  base_token_address,// base token address
   quote_token_address, // quote token address
-  base_token_address,   // base token address
   buy_account, // ganache account
   sell_account, // ganache account
   buy_amount,
@@ -20,7 +20,13 @@ const tokenTax = (
   const Web3 = web3;
   const routerContract = router;
 
-  console.log(quote_token_address, base_token_address, buy_account, sell_account, buy_amount);
+  console.log(
+    quote_token_address,
+    base_token_address,
+    buy_account,
+    sell_account,
+    buy_amount
+  );
 
   const quote_token_details = fetchTokenDetails(Web3, quote_token_address);
   const quote_token = quote_token_details.contract;
@@ -58,7 +64,7 @@ const tokenTax = (
         0,
         path,
         buy_account,
-        2**63
+        2 ** 63
       )
       .transact({ from: buy_account } | generic_tx_params);
   } catch (err) {
@@ -125,7 +131,7 @@ const tokenTax = (
         0,
         path,
         sell_account,
-        2**63
+        2 ** 63
       )
       .transact({ from: sell_account } | generic_tx_params);
   } catch (err) {
@@ -156,8 +162,6 @@ const tokenTax = (
       sell_tax_percentage = 0;
     }
   }
-
 };
-
 
 module.exports = { tokenTax };
