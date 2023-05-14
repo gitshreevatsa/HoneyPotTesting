@@ -14,33 +14,42 @@ const networkOptions = {
 const routerContract = {
   56: "0x10ED43C718714eb63d5aA57B78B54704E256024E",
   1: "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
+  137: "0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff",
 };
 
-/**
- * @dev This function is used to connect to the ganache network to a specific network fork with specific accounts unlocked
- * @param {Int} network
- * @param {Address} buy_account
- * @param {Address} sell_account
- * @returns {Object} return the web3 Instance and swapRouterContract
- */
+// /**
+//  * @dev This function is used to connect to the ganache network to a specific network fork with specific accounts unlocked
+//  * @param {Int} network
+//  * @param {Address} buy_account
+//  * @param {Address} sell_account
+//  * @returns {Object} return the web3 Instance and swapRouterContract
+//  */
 const ganacheConnection = async (network, buy_account, sell_account) => {
-
   const ETHER_GOD = "0x0000000000000000000000000000000000000000";
   console.log(buy_account, sell_account, "--------------------------------");
   // Choosing the network fork based on the network id
-  const options = {
-    fork: networkOptions[network],
-    wallet: { unlockedAccounts: [buy_account, sell_account, ETHER_GOD] },
-  };
+  let options = {};
+  if (sell_account !== undefined) {
+    options = {
+      fork: networkOptions[network],
+      wallet: { unlockedAccounts: [buy_account, sell_account, ETHER_GOD] },
+    };
+  } else {
+    options = {
+      fork: networkOptions[network],
+      wallet: { unlockedAccounts: [buy_account, ETHER_GOD] },
+    };
+  }
   // Constructing the provider and web3 instance
   const ganacheProvider = ganache.provider(options);
   const web3 = new Web3(ganacheProvider);
-  
+
   // Connecting to specific router contract based on network
   const swapRouterContract = new web3.eth.Contract(
     require("./abi/uniswap.json").abi,
     routerContract[network]
   );
+  console.log(swapRouterContract);
 
   return { web3, swapRouterContract };
 };
