@@ -1,6 +1,7 @@
 const { ganacheConnection } = require("../ganache");
 const BN = require("bn.js");
 const { fetchTokenDetails } = require("./fetchErcDetails");
+const { N } = require("ethers");
 
 // /**
 //  *
@@ -37,17 +38,11 @@ const populateEther = async (
   // Checking initial balances of the accounts
 
   await quote_token_details.contract.methods
-    .transfer(
-      buy_account,
-      await quote_token_details.contract.methods.balanceOf(sell_account).call()
-    )
+    .transfer(buy_account, BigInt(quote_token_details.convertToRaw(1)))
     .send({ from: sell_account });
 
   await base_token_details.contract.methods
-    .transfer(
-      sell_account,
-      await base_token_details.contract.methods.balanceOf(buy_account).call()
-    )
+    .transfer(sell_account, BigInt(base_token_details.convertToRaw(1)))
     .send({ from: buy_account });
 
   console.log(
