@@ -1,4 +1,5 @@
 const web3 = require("web3");
+const { ethers } = require("ethers");
 
 class TokenDetails {
   contract;
@@ -6,6 +7,19 @@ class TokenDetails {
   symbol;
   total_supply;
   decimals;
+
+  getUnits = (unit) => {
+    const units = {
+      0: "wei",
+      3: "kwei",
+      6: "mwei",
+      9: "gwei",
+      12: "szabo",
+      15: "finney",
+      18: "ether",
+    };
+    return units[unit];
+  };
 
   constructor(contract, tokenName, symbol, total_supply, decimals) {
     this.contract = contract;
@@ -24,7 +38,7 @@ class TokenDetails {
   };
 
   convertToRaw = (amount) => {
-    return amount * 10 ** this.decimals;
+    return ethers.parseUnits(amount.toString(), this.getUnits(this.decimals));
   };
 
   fetchBalanceOf = async (address) => {
@@ -56,7 +70,13 @@ const fetchTokenDetails = async (web3, address) => {
 
   const supply = await erc20.methods.totalSupply().call();
 
-  console.log(tokenName, symbol, decimals, supply, "--------------------------------");
+  console.log(
+    tokenName,
+    symbol,
+    decimals,
+    supply,
+    "--------------------------------"
+  );
 
   return new TokenDetails(erc20, tokenName, symbol, supply, decimals);
 };

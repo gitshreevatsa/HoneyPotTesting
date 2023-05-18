@@ -98,10 +98,12 @@ const tokenTax = async (
   }
 
   let path = [quote_token._address, base_token._address];
-  const amountIn = BigInt(
-    await quote_token.methods.balanceOf(buy_account).call()
-  );
+  const amountIn =
+    quote_token_details.convertToRaw(1)
 
+  // const initial_base_balance = BigInt(
+  //   await quote_token.methods.balanceOf(buy_account).call()
+  // );
   /**
    * Buy Tax
    */
@@ -131,15 +133,16 @@ const tokenTax = async (
     }
   }
   console.log(trail1);
-  const initial_base_balance = balances[0];
-  const receivedAmount =
-    initial_base_balance -
-    (await base_token.methods.balanceOf(buy_account).call());
-  console.log("received amount", receivedAmount);
 
-  if (receivedAmount <= 0) {
-    console.log("100% tax");
-  }
+  const receivedAmount = (
+    await quote_token.methods.balanceOf(buy_account).call()
+  );
+
+  // console.log("received amount", receivedAmount);
+
+  // if (receivedAmount <= 0) {
+  //   console.log("100% tax");
+  // }
 
   let uniswap_price = await routerContract.methods
     .getAmountsOut(amountIn, path)
@@ -147,7 +150,7 @@ const tokenTax = async (
 
   console.log(uniswap_price);
   const buy_tax_percentage =
-    (uniswap_price[1] - receivedAmount) / uniswap_price[1];
+    (BigInt(uniswap_price[1]) - receivedAmount) / BigInt(uniswap_price[1]);
   console.log(buy_tax_percentage);
 
   /**
@@ -173,52 +176,52 @@ const tokenTax = async (
   //  * Sell Tax
   //  */
 
-  path = [base_token._address, quote_token._address];
-  const recieved_amount_by_seller = BigInt(
-    await base_token.methods.balanceOf(sell_account).call()
-  );
+  // path = [base_token._address, quote_token._address];
+  // const recieved_amount_by_seller = BigInt(
+  //   await base_token.methods.balanceOf(sell_account).call()
+  // );
 
-  let sell_tax = 0;
-  let sell_tax_percentage = 0;
+  // let sell_tax = 0;
+  // let sell_tax_percentage = 0;
 
-  try {
-    await router.methods
-      .swapExactTokensForTokensSupportingFeeOnTransferTokens(
-        recieved_amount_by_seller,
-        0,
-        path,
-        sell_account,
-        2 ** 63
-      )
-      .call({ from: sell_account });
-  } catch (err) {
-    const msg = err.message.toString();
-    console.log(msg);
-    if (msg.includes("VM Exception while processing transaction: revert")) {
-      console.log("sell failed");
-    } else if (msg.includes("out of gas")) {
-      console.log("Insufficient gas");
-    }
-    console.log(
-      "swapExactTokensForTokensSupportingFeeOnTransferTokens failed while sell"
-    );
-  }
+  // try {
+  //   await router.methods
+  //     .swapExactTokensForTokensSupportingFeeOnTransferTokens(
+  //       recieved_amount_by_seller,
+  //       0,
+  //       path,
+  //       sell_account,
+  //       2 ** 63
+  //     )
+  //     .call({ from: sell_account });
+  // } catch (err) {
+  //   const msg = err.message.toString();
+  //   console.log(msg);
+  //   if (msg.includes("VM Exception while processing transaction: revert")) {
+  //     console.log("sell failed");
+  //   } else if (msg.includes("out of gas")) {
+  //     console.log("Insufficient gas");
+  //   }
+  //   console.log(
+  //     "swapExactTokensForTokensSupportingFeeOnTransferTokens failed while sell"
+  //   );
+  // }
 
-  const recieved_amount_after_sell = balances[0];
-  uniswap_price = await router.methods
-    .getAmountsOut(recieved_amount_by_seller, path)
-    .call();
+  // const recieved_amount_after_sell = balances[0];
+  // uniswap_price = await router.methods
+  //   .getAmountsOut(recieved_amount_by_seller, path)
+  //   .call();
 
-  if (recieved_amount_after_sell == 0) {
-    console.log("100% sell tax");
-  }
-  sell_tax = uniswap_price[1] - recieved_amount_after_sell;
-  if (uniswap_price[1] > 0) {
-    sell_tax_percentage = sell_tax / uniswap_price[1];
-  } else {
-    sell_tax_percentage = 0;
-  }
-  console.log("sell tax percentage", sell_tax_percentage, sell_tax);
+  // if (recieved_amount_after_sell == 0) {
+  //   console.log("100% sell tax");
+  // }
+  // sell_tax = uniswap_price[1] - recieved_amount_after_sell;
+  // if (uniswap_price[1] > 0) {
+  //   sell_tax_percentage = sell_tax / uniswap_price[1];
+  // } else {
+  //   sell_tax_percentage = 0;
+  // }
+  // console.log("sell tax percentage", sell_tax_percentage, sell_tax);
 };
 
 module.exports = { tokenTax };

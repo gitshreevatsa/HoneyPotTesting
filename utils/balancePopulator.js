@@ -37,12 +37,48 @@ const populateEther = async (
   const quote_token_details = await fetchTokenDetails(web3, quote_token);
   // Checking initial balances of the accounts
 
+  const buy_account_balance = await quote_token_details.contract.methods
+    .balanceOf(buy_account)
+    .call();
+
+  const sell_account_balance = await base_token_details.contract.methods
+    .balanceOf(sell_account)
+    .call();
+
+  if (buy_account_balance !== 0) {
+    console.log("Accounts already funded");
+    await quote_token_details.contract.methods
+      .transfer(
+        "0xA93F74309D5631EbbC1E42FD411250A6b6240a69",
+        buy_account_balance
+      )
+      .send({ from: buy_account });
+  }
+
+  if (sell_account_balance !== 0) {
+    await base_token_details.contract.methods
+      .transfer(
+        "0xA93F74309D5631EbbC1E42FD411250A6b6240a69",
+        sell_account_balance
+      )
+      .send({ from: sell_account });
+  }
+
+  console.log(
+    await quote_token_details.contract.methods.balanceOf(buy_account).call(),
+    await base_token_details.contract.methods.balanceOf(sell_account).call(),
+
+    "INITIAL BALANCES"
+  );
+
+  console.log(quote_token_details.convertToRaw(1));
+  
   await quote_token_details.contract.methods
-    .transfer(buy_account, BigInt(quote_token_details.convertToRaw(1)))
+    .transfer(buy_account, quote_token_details.convertToRaw(1))
     .send({ from: sell_account });
 
   await base_token_details.contract.methods
-    .transfer(sell_account, BigInt(base_token_details.convertToRaw(1)))
+    .transfer(sell_account, base_token_details.convertToRaw(1))
     .send({ from: buy_account });
 
   console.log(

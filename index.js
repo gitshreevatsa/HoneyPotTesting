@@ -10,14 +10,11 @@
  */
 
 /**
- * File Structure:
- * - index.js
- * - GoPlus.js
- * - Ganache.js
- * - swapTest.js : Simulates the transactions based on the AMM it exists on given by GoPlus.js
- * - databaseModel.js
- * - config.js
- * - abi - folder -- pancake.js -- uniswap.js -- erc20.js
+ * To do:
+ * - remove quote tokens from both accounts
+ * - send in one base token to uniswap router, which is ethers formatted
+ * - check how much quote token u get
+ * - compare with getAmountsOut
  */
 
 // call gecko terminal for quote token
