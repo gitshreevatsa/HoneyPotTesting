@@ -47,21 +47,30 @@ const populateEther = async (
 
   if (buy_account_balance !== 0) {
     console.log("Accounts already funded");
+    try{
     await quote_token_details.contract.methods
       .transfer(
         "0xA93F74309D5631EbbC1E42FD411250A6b6240a69",
         buy_account_balance
       )
       .send({ from: buy_account });
+    }catch(e){
+      console.log(e);
+    }
   }
 
   if (sell_account_balance !== 0) {
+    console.log("Accounts already funded with quote token");
+    try{
     await base_token_details.contract.methods
       .transfer(
         "0xA93F74309D5631EbbC1E42FD411250A6b6240a69",
         sell_account_balance
       )
       .send({ from: sell_account });
+    }catch(e){
+      console.log(e);
+    }
   }
 
   console.log(
@@ -91,40 +100,6 @@ const populateEther = async (
     "QUOTE TOKEN : SELL ACCOUNT"
   );
 
-  // // Funding buy_account with quote token
-  // const quoteTokenFunding = await quote_token_details.contract.methods
-  //   .transfer(
-  //     buy_account,
-  //     await quote_token_details.contract.methods.balanceOf(sell_account).call()
-  //   )
-  //   .send({ from: sell_account })
-  //   .then((receipt) => console.log(receipt))
-  //   .catch((err) => console.log('Error'));
-
-  // // Funding sell_account with base token
-  // const baseTokenTokenFunding = await base_token_details.contract.methods
-  //   .transfer(
-  //     sell_account,
-  //     await base_token_details.contract.methods.balanceOf(buy_account).call()
-  //   )
-  //   .send({ from: buy_account })
-  //   .then((receipt) => console.log(receipt))
-  //   .catch((err) => console.log('Error'));
-
-  //   const baseTokenReciept = await web3.eth.getTransactionReceipt(baseTokenTokenFunding).status;
-  //   const quoteTokenReciept = await web3.eth.getTransactionReceipt(quoteTokenFunding).status;
-
-  // // Checking final balances of the accounts after transfers
-  // console.log(
-  //   await base_token_details.contract.methods.balanceOf(sell_account).call(),
-  //   "STATE CHANGE WITH TRANSFER"
-  // );
-  // console.log(
-  //   await quote_token_details.contract.methods.balanceOf(buy_account).call(),
-  //   "STATE CHANGE WITH TRANSFER"
-  // );
-
-  // return { baseTokenReciept, quoteTokenReciept };
 };
 
 module.exports = { populateEther };

@@ -60,6 +60,7 @@ const tokenTax = async (
     "router balance of ",
     base_token_details.tokenName
   );
+
   console.log(
     "Buy Account and Quote token:",
     quote_token_details.tokenName,
@@ -98,8 +99,22 @@ const tokenTax = async (
     console.log(err);
   }
 
+  console.log(
+    "=============================",
+    await base_token.methods
+      .allowance(buy_account, routerContract._address)
+      .call(),
+    "============================="
+  );
+  console.log(
+    "=============================",
+    await quote_token.methods
+      .allowance(sell_account, routerContract._address)
+      .call(),
+    "============================="
+  );
   let path = [base_token._address, quote_token._address];
-  const amountIn = base_token_details.convertToRaw(10);
+  const amountIn = await base_token.methods.balanceOf(buy_account).call();
   console.log("amount in", amountIn);
 
   // const initial_base_balance = BigInt(
@@ -118,25 +133,25 @@ const tokenTax = async (
         buy_account,
         new BN("99999999999999").toNumber()
       )
-      .call({ from: buy_account });
+      .send({ from: buy_account, gas: 3000000 });
     console.log(
       await quote_token.methods.balanceOf(buy_account).call(),
       "Transfer was indeed called"
     );
     console.log("success");
   } catch (err) {
-    const msg = err.message;
+    const msg = err;
 
     console.log("ERROR MESSAGE", msg);
-    if (msg.includes("ERC20: transfer amount exceeds balance")) {
-      console.log("Insufficient balance");
-    } else if (msg.includes("ERC20: transfer amount exceeds allowance")) {
-      console.log("Insufficient allowance");
-    } else if (
-      msg.includes("TRANSFER_FAILED") | msg.includes("TRANSFER_FROM_FAILED")
-    ) {
-      console.log("Transfer failed");
-    }
+    // if (msg.includes("ERC20: transfer amount exceeds balance")) {
+    //   console.log("Insufficient balance");
+    // } else if (msg.includes("ERC20: transfer amount exceeds allowance")) {
+    //   console.log("Insufficient allowance");
+    // } else if (
+    //   msg.includes("TRANSFER_FAILED") | msg.includes("TRANSFER_FROM_FAILED")
+    // ) {
+    //   console.log("Transfer failed");
+    // }
   }
   console.log(trail1);
 
@@ -154,21 +169,18 @@ const tokenTax = async (
     .getAmountsOut(amountIn, path)
     .call();
 
+  const buyTax = (uniswap_price[1] - receivedAmount) / uniswap_price[1];
+
   console.log(uniswap_price);
-  let decimalsRecievedAmount =
-    quote_token_details.convertToDecimals(receivedAmount);
-  let decimalsUniswapPrice = quote_token_details.convertToDecimals(
-    uniswap_price[1]
-  );
+
   console.log(
     receivedAmount,
     "Recieved amount",
     uniswap_price[1],
     "Uniswap price"
   );
-  const buy_tax_percentage =
-    (decimalsUniswapPrice - decimalsRecievedAmount) / decimalsUniswapPrice;
-  console.log("Buy Tax Percentage", buy_tax_percentage);
+
+  console.log("Buy Tax Percentage", buyTax * 100, "%");
 
   /**
    * exact tokens for tokens
@@ -183,52 +195,54 @@ const tokenTax = async (
         buy_account,
         new BN("99999999999999").toNumber()
       )
-      .call({ from: buy_account });
+      .send({ from: buy_account });
     console.log("success in transferring Exact tokens for tokens");
-    console.log(await quote_token.methods.balanceOf(buy_account).call());
   } catch (err) {
-    const msg = err.message;
+    const msg = err;
     console.log("ERROR MESSAGE transferring Exact tokens for tokens", msg);
   }
 
   /**
    * Transfer Tax
    */
-  try {
-    await base_token.methods
-      .transfer("0xBbefc461F6D944932EEea9C6d4c26C21e9cCeFB8", receivedAmount)
-      .call({ from: buy_account });
-  } catch (err) {
-    const msg = err.message;
-    if (msg.includes("out of gas")) {
-      console.log("Insufficient gas");
-    } else {
-      console.log("Transfer failed");
-    }
-  }
+  // try {
+  //   await base_token.methods
+  //     .transfer("0xBbefc461F6D944932EEea9C6d4c26C21e9cCeFB8", receivedAmount)
+  //     .send({ from: buy_account });
+  // } catch (err) {
+  //   const msg = err.message;
+  //   if (msg.includes("out of gas")) {
+  //     console.log("Insufficient gas");
+  //   } else {
+  //     console.log("Transfer failed");
+  //   }
+  // }
 
-  const transfer_tax_percentage =
-    (BigInt(await base_token.methods.balanceOf(buy_account).call()) -
-      BigInt(
-        await base_token.methods
-          .balanceOf("0xBbefc461F6D944932EEea9C6d4c26C21e9cCeFB8")
-          .call()
-      )) /
-    BigInt(await base_token.methods.balanceOf(buy_account).call());
+  // const transfer_tax_percentage =
+  //   (BigInt(await base_token.methods.balanceOf(buy_account).call()) -
+  //     BigInt(
+  //       await base_token.methods
+  //         .balanceOf("0xBbefc461F6D944932EEea9C6d4c26C21e9cCeFB8")
+  //         .call()
+  //     )) /
+  //   BigInt(await base_token.methods.balanceOf(buy_account).call());
 
-  console.log("transfer tax percentage", transfer_tax_percentage);
-  // /**
-  //  * Sell Tax
-  //  */
+  // console.log("transfer tax percentage", transfer_tax_percentage);
+
+  /**
+   * Sell Tax
+   */
 
   path = [quote_token._address, base_token._address];
-  const recieved_amount_by_seller = base_token_details.convertToRaw(1);
+  const recieved_amount_by_seller = await quote_token.methods
+    .balanceOf(sell_account)
+    .call();
 
   let sell_tax = 0;
   let sell_tax_percentage = 0;
-
+  let trail2 = "";
   try {
-    await router.methods
+    trail2 = await router.methods
       .swapExactTokensForTokensSupportingFeeOnTransferTokens(
         recieved_amount_by_seller,
         0,
@@ -236,7 +250,8 @@ const tokenTax = async (
         sell_account,
         new BN("99999999999999").toNumber()
       )
-      .call({ from: sell_account });
+      .send({ from: sell_account, gas: 3000000 });
+    console.log("success in selling");
   } catch (err) {
     const msg = err.message;
     console.log("Error selling", msg);
@@ -250,21 +265,21 @@ const tokenTax = async (
     );
   }
 
-  const recieved_amount_after_sell = balances[0];
+  console.log(trail2);
   uniswap_price = await router.methods
     .getAmountsOut(recieved_amount_by_seller, path)
     .call();
 
-  if (recieved_amount_after_sell == 0) {
-    console.log("100% sell tax");
-  }
-  sell_tax = uniswap_price[1] - recieved_amount_after_sell;
-  if (uniswap_price[1] > 0) {
-    sell_tax_percentage = sell_tax / uniswap_price[1];
-  } else {
-    sell_tax_percentage = 0;
-  }
-  console.log("sell tax percentage", sell_tax_percentage, sell_tax);
+  const recieved_Base_Amount = await base_token.methods
+    .balanceOf(sell_account)
+    .call();
+
+  console.log("recieved base amount", recieved_Base_Amount);
+  console.log("uniswap price", uniswap_price);
+  sell_tax = (uniswap_price[1] - recieved_Base_Amount) / uniswap_price[1];
+  console.log("sell tax", sell_tax);
+  sell_tax_percentage = sell_tax * 100;
+  console.log("sell tax percentage", sell_tax_percentage);
 };
 
 module.exports = { tokenTax };

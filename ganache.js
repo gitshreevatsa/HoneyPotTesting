@@ -41,15 +41,22 @@ const ganacheConnection = async (network, buy_account, sell_account) => {
     };
   }
   // Constructing the provider and web3 instance
-  const ganacheProvider = ganache.provider(options);
-  const web3 = new Web3(ganacheProvider);
-
-  // Connecting to specific router contract based on network
-  const swapRouterContract = new web3.eth.Contract(
-    require("./abi/uniswap.json").abi,
-    routerContract[network]
-  );
-  console.log(swapRouterContract);
+  let ganacheProvider;
+  let web3;
+  let swapRouterContract;
+  try {
+    ganacheProvider = ganache.provider(options);
+    web3 = new Web3(ganacheProvider);
+    swapRouterContract = new web3.eth.Contract(
+      require("./abi/uniswap.json").abi,
+      routerContract[network]
+    );
+    console.log(swapRouterContract);
+  } catch (e) {
+    console.log(e);
+    console.log("Error in connecting to ganache network");
+    console.log(buy_account, sell_account, "--------------------------------");
+  }
 
   return { web3, swapRouterContract };
 };

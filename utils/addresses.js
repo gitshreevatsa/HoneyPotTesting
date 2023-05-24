@@ -67,19 +67,46 @@ const addresses = async (base_address, chain_id) => {
   );
   const holderArray =
     addressHolders["data"]["result"][base_address.toLowerCase()]["holders"];
+  const lpArray =
+    addressHolders["data"]["result"][base_address.toLowerCase()]["lp_holders"];
+  console.log(holderArray, "holderArray");
   const eoaHolders = new Array();
   const contractHolders = new Array();
-  holderArray.forEach((element) => {
-    if (element["is_contract"] == 0 && element['balance'] > '0') {
-      eoaHolders.push(element["address"]);
-    } else {
-      contractHolders.push(element["address"]);
+  if (holderArray == undefined) {
+    eoaHolders.push("0x0000000000000000000000000000000000000000");
+  } else {
+    await holderArray.forEach((element) => {
+      if (element["is_contract"] === 0 && element["balance"] > "0") {
+        eoaHolders.push(element["address"]);
+      } else {
+        contractHolders.push(element["address"]);
+      }
+    });
+    if (eoaHolders.length == 0) {
+      // get Lp holders and make a list of them
+      await lpArray.forEach((element) => {
+        if (element["is_contract"] === 0 && element["balance"] > "0") {
+          eoaHolders.push(element["address"]);
+        }else{
+          contractHolders.push(element["address"]);
+        }
+      });
+      console.log("To be done");
     }
-  });
+  }
   console.log(eoaHolders, "EOAholderArray");
   console.log(contractHolders, "ContractholderArray");
   // console.log(addressHolders['data']['result'], "addressHolders");
-  return eoaHolders;
+  if (eoaHolders.length == 0) {
+    console.log("No EOA holders found");
+    return false;
+  } else {
+    return eoaHolders;
+  }
 };
 
 module.exports = { addresses };
+
+// " https://api.gopluslabs.io/api/v1/token_security/1?contract_addresses=0x4fa38c2927d0155402cA22D993117e29065CE8eb"
+
+// https://api.gopluslabs.io/api/v1/token_security/56?contract_addresses=0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c
