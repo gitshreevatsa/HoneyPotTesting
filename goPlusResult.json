@@ -1,0 +1,360 @@
+{
+    "code": 1,
+    "message": "OK",
+    "result": {
+        "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c": {
+            "anti_whale_modifiable": "0",
+            "buy_tax": "0",
+            "can_take_back_ownership": "0",
+            "cannot_buy": "0",
+            "cannot_sell_all": "0",
+            "creator_address": "0x4e656459ed25bf986eea1196bc1b00665401645d",
+            "creator_balance": "0",
+            "creator_percent": "0.000000",
+            "dex": [
+                {
+                    "name": "PancakeV2",
+                    "liquidity": "48542408.11267452",
+                    "pair": "0x16b9a82891338f9ba80e2d6970fdda79d1eb0dae"
+                },
+                {
+                    "name": "PancakeV3",
+                    "liquidity": "35572127.15340462194980627626686313",
+                    "pair": "0x36696169c63e42cd08ce11f5deebbcebae652050"
+                },
+                {
+                    "name": "PancakeV3",
+                    "liquidity": "29234751.24271540098274523622703482",
+                    "pair": "0xfc75f4e78bf71ed5066db9ca771d4ccb7c1264e0"
+                },
+                {
+                    "name": "PancakeV3",
+                    "liquidity": "22949430.96086426561669560087346704",
+                    "pair": "0x7d05c84581f0c41ad80ddf677a510360bae09a5a"
+                },
+                {
+                    "name": "PancakeV2",
+                    "liquidity": "22468082.34482445",
+                    "pair": "0x0ed7e52944161450477ee417de9cd3a859b14fd0"
+                },
+                {
+                    "name": "PancakeV2",
+                    "liquidity": "20041001.69080923",
+                    "pair": "0x58f876857a02d6762e0101bb5c46a8c1ed44dc16"
+                },
+                {
+                    "name": "Biswap",
+                    "liquidity": "16006112.84364425",
+                    "pair": "0x8840c6252e2e86e545defb6da98b2a0e26d8c1ba"
+                },
+                {
+                    "name": "Biswap",
+                    "liquidity": "12423820.99946933",
+                    "pair": "0xacaac9311b0096e04dfe96b6d87dec867d3883dc"
+                },
+                {
+                    "name": "mdex",
+                    "liquidity": "4893224.88631299",
+                    "pair": "0x09cb618bf5ef305fadfd2c8fc0c26eecf8c6d5fd"
+                },
+                {
+                    "name": "UniswapV3",
+                    "liquidity": "1764437.049138350921732543244084562",
+                    "pair": "0x32776ed4d96ed069a2d812773f0ad8ad9ef83cf8"
+                },
+                {
+                    "name": "UniswapV3",
+                    "liquidity": "1700845.462287781275812199967458982",
+                    "pair": "0x6fe9e9de56356f7edbfcbb29fab7cd69471a4869"
+                },
+                {
+                    "name": "UniswapV3",
+                    "liquidity": "1446497.510095985505517612170895655",
+                    "pair": "0x28df0835942396b7a1b7ae1cd068728e6ddbbafd"
+                },
+                {
+                    "name": "PancakeV2",
+                    "liquidity": "1088533.93157980",
+                    "pair": "0xd99c7f6c65857ac913a8f880a4cb84032ab2fc5b"
+                },
+                {
+                    "name": "PancakeV1",
+                    "liquidity": "961321.01748870",
+                    "pair": "0x1b96b92314c44b159149f7e0303511fb2fc4774f"
+                },
+                {
+                    "name": "PancakeV1",
+                    "liquidity": "706724.66394609",
+                    "pair": "0xa527a61703d82139f8a06bc30097cc9caa2df5a6"
+                },
+                {
+                    "name": "Ape",
+                    "liquidity": "368389.26870798",
+                    "pair": "0x51e6d27fa57373d8d4c256231241053a70cb1d93"
+                },
+                {
+                    "name": "Biswap",
+                    "liquidity": "116848.29735699",
+                    "pair": "0x06cd679121ec37b0a2fd673d4976b09d81791856"
+                },
+                {
+                    "name": "Biswap",
+                    "liquidity": "96591.63511736",
+                    "pair": "0x3d94d03eb9ea2d4726886ab8ac9fc0f18355fd13"
+                },
+                {
+                    "name": "PancakeV1",
+                    "liquidity": "69599.31737699",
+                    "pair": "0x20bcc3b8a0091ddac2d0bc30f68e6cbb97de59cd"
+                },
+                {
+                    "name": "Ape",
+                    "liquidity": "58533.19940701",
+                    "pair": "0x83c5b5b309ee8e232fe9db217d394e262a71bcc0"
+                },
+                {
+                    "name": "mdex",
+                    "liquidity": "51076.90118488",
+                    "pair": "0x340192d37d95fb609874b1db6145ed26d1e47744"
+                },
+                {
+                    "name": "mdex",
+                    "liquidity": "24381.88247944",
+                    "pair": "0xa13afe2df0fa0bb11f2aeaaaf98ac1d591e108d1"
+                },
+                {
+                    "name": "PancakeV2",
+                    "liquidity": "20650.81017160",
+                    "pair": "0x3fc593d15c34d2f91ca3b4f2097dddaf3c4de86c"
+                },
+                {
+                    "name": "Ape",
+                    "liquidity": "15024.22579223",
+                    "pair": "0x60593abea55e9ea9d31c1b6473191cd2475a720d"
+                },
+                {
+                    "name": "PancakeV1",
+                    "liquidity": "87.64112536",
+                    "pair": "0x30479874f9320a62bce3bc0e315c920e1d73e278"
+                },
+                {
+                    "name": "Ape",
+                    "liquidity": "56.90425707",
+                    "pair": "0xd00302278693e5084e2b06a996d1d14ae3467fe6"
+                },
+                {
+                    "name": "mdex",
+                    "liquidity": "34.44645148",
+                    "pair": "0x8e8bb17ebc33db8c2f2e89ba32264f6586dc9041"
+                },
+                {
+                    "name": "FstSwap",
+                    "liquidity": "0.00104599",
+                    "pair": "0xe9d7363bd5b5c252f28ceb142ffdb01e0fb936a5"
+                },
+                {
+                    "name": "mdex",
+                    "liquidity": "0.00007328",
+                    "pair": "0x5c0aa4751a8ae5e74382ee1be84df3ff8cfcd01a"
+                },
+                {
+                    "name": "FstSwap",
+                    "liquidity": "0.00000000",
+                    "pair": "0x779680f4ed912b9ec1f4c3546411d535eee74e63"
+                }
+            ],
+            "external_call": "0",
+            "hidden_owner": "0",
+            "holder_count": "1571269",
+            "holders": [
+                {
+                    "address": "0xd7d069493685a581d27824fc46eda46b7efc0063",
+                    "tag": "",
+                    "is_contract": 1,
+                    "balance": "305995.55112923007",
+                    "percent": "0.098965239941568620",
+                    "is_locked": 0
+                },
+                {
+                    "address": "0x16b9a82891338f9ba80e2d6970fdda79d1eb0dae",
+                    "tag": "PancakeV2",
+                    "is_contract": 1,
+                    "balance": "158928.82909908984",
+                    "percent": "0.051400844382804259",
+                    "is_locked": 0
+                },
+                {
+                    "address": "0x58b0bb56cfdfc5192989461dd43568bcfb2797db",
+                    "tag": "",
+                    "is_contract": 1,
+                    "balance": "113954.65588769667",
+                    "percent": "0.036855273943580887",
+                    "is_locked": 0
+                },
+                {
+                    "address": "0x0ed7e52944161450477ee417de9cd3a859b14fd0",
+                    "tag": "PancakeV2",
+                    "is_contract": 1,
+                    "balance": "73646.33748938964",
+                    "percent": "0.023818736689335359",
+                    "is_locked": 0
+                },
+                {
+                    "address": "0x36696169c63e42cd08ce11f5deebbcebae652050",
+                    "tag": "PancakeV3",
+                    "is_contract": 1,
+                    "balance": "72538.07841511976",
+                    "percent": "0.023460302964407708",
+                    "is_locked": 0
+                },
+                {
+                    "address": "0x58f876857a02d6762e0101bb5c46a8c1ed44dc16",
+                    "tag": "PancakeV2",
+                    "is_contract": 1,
+                    "balance": "65707.27440494034",
+                    "percent": "0.021251080786612915",
+                    "is_locked": 0
+                },
+                {
+                    "address": "0x8840c6252e2e86e545defb6da98b2a0e26d8c1ba",
+                    "tag": "Biswap",
+                    "is_contract": 1,
+                    "balance": "52425.78487436042",
+                    "percent": "0.016955574550248829",
+                    "is_locked": 0
+                },
+                {
+                    "address": "0x1cea83ec5e48d9157fcae27a19807bef79195ce1",
+                    "tag": "",
+                    "is_contract": 1,
+                    "balance": "49683.280743173586",
+                    "percent": "0.016068592440927170",
+                    "is_locked": 0
+                },
+                {
+                    "address": "0xacaac9311b0096e04dfe96b6d87dec867d3883dc",
+                    "tag": "Biswap",
+                    "is_contract": 1,
+                    "balance": "40733.96636515619",
+                    "percent": "0.013174200540572451",
+                    "is_locked": 0
+                },
+                {
+                    "address": "0xfc75f4e78bf71ed5066db9ca771d4ccb7c1264e0",
+                    "tag": "PancakeV3",
+                    "is_contract": 1,
+                    "balance": "40095.656280978525",
+                    "percent": "0.012967757961898859",
+                    "is_locked": 0
+                }
+            ],
+            "honeypot_with_same_creator": "0",
+            "is_anti_whale": "0",
+            "is_blacklisted": "0",
+            "is_honeypot": "0",
+            "is_in_dex": "1",
+            "is_mintable": "0",
+            "is_open_source": "1",
+            "is_proxy": "0",
+            "is_whitelisted": "0",
+            "lp_holder_count": "7851",
+            "lp_holders": [
+                {
+                    "address": "0xa5f8c5dbd5f286960b9d90548680ae5ebff07652",
+                    "tag": "",
+                    "is_contract": 1,
+                    "balance": "1817550.0063441186",
+                    "percent": "0.964939082636859902",
+                    "is_locked": 0
+                },
+                {
+                    "address": "0x73feaa1ee314f8c655e354234017be2193c9e24e",
+                    "tag": "",
+                    "is_contract": 1,
+                    "balance": "36721.429646728335",
+                    "percent": "0.019495443048469988",
+                    "is_locked": 0
+                },
+                {
+                    "address": "0x14b2e8329b8e06bcd524eb114e23fabd21910109",
+                    "tag": "",
+                    "is_contract": 0,
+                    "balance": "4172.374053100175",
+                    "percent": "0.002215117480764409",
+                    "is_locked": 0
+                },
+                {
+                    "address": "0xb2df747c5d1bdadd6f7e581ade3ad193d6a296f2",
+                    "tag": "",
+                    "is_contract": 0,
+                    "balance": "1593.5167169094684",
+                    "percent": "0.000845999589344998",
+                    "is_locked": 0
+                },
+                {
+                    "address": "0xba74ee0139a704384f827fa33ae78ca85ee0f545",
+                    "tag": "",
+                    "is_contract": 0,
+                    "balance": "1203.6413934544646",
+                    "percent": "0.000639014397386437",
+                    "is_locked": 0
+                },
+                {
+                    "address": "0xad2a06d98eccb536fde2775c154fa88dfa2c4c0e",
+                    "tag": "",
+                    "is_contract": 0,
+                    "balance": "729.6269372399249",
+                    "percent": "0.000387359657247382",
+                    "is_locked": 0
+                },
+                {
+                    "address": "0x8f5d46fcadeca93356b70f40858219bb1fbf6088",
+                    "tag": "",
+                    "is_contract": 0,
+                    "balance": "394.0455203783029",
+                    "percent": "0.000209199153598976",
+                    "is_locked": 0
+                },
+                {
+                    "address": "0x0ed943ce24baebf257488771759f9bf482c39706",
+                    "tag": "",
+                    "is_contract": 1,
+                    "balance": "266.43301414972416",
+                    "percent": "0.000141449548766435",
+                    "is_locked": 0
+                },
+                {
+                    "address": "0x57cae9728d37ede7971daed411bc46abf36cf6e4",
+                    "tag": "",
+                    "is_contract": 0,
+                    "balance": "258.55469023097623",
+                    "percent": "0.000137266938863909",
+                    "is_locked": 0
+                },
+                {
+                    "address": "0xf7de3e560677241310e8cb207cb644bdff5b4579",
+                    "tag": "",
+                    "is_contract": 0,
+                    "balance": "219.59742000000008",
+                    "percent": "0.000116584485854361",
+                    "is_locked": 0
+                }
+            ],
+            "lp_total_supply": "1883590.414202474382185903",
+            "owner_address": "",
+            "owner_balance": "0",
+            "owner_change_balance": "0",
+            "owner_percent": "0",
+            "personal_slippage_modifiable": "0",
+            "selfdestruct": "0",
+            "sell_tax": "0",
+            "slippage_modifiable": "0",
+            "token_name": "Wrapped BNB",
+            "token_symbol": "WBNB",
+            "total_supply": "3091949.772565569085301351",
+            "trading_cooldown": "0",
+            "transfer_pausable": "0",
+            "trust_list": "1"
+        }
+    }
+}

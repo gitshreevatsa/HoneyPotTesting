@@ -24,22 +24,26 @@ const geckoApi = async (token_address, chain) => {
   const response = await fetch(url);
   const data = await response.json();
   console.log(data.data[0].relationships, "*********************************");
+  let path;
+  if (data.data[0].relationships === undefined) {
+    return { path: [] };
+  } else {
+    const pairdata = data.data[0];
+    const base_token = pairdata.relationships.base_token.data.id.substr(
+      chain_id[chain].length + 1
+    );
+    const quote_token = pairdata.relationships.quote_token.data.id.substr(
+      chain_id[chain].length + 1
+    );
 
-  const pairdata = data.data[0];
-  const base_token = pairdata.relationships.base_token.data.id.substr(
-    chain_id[chain].length + 1
-  );
-  const quote_token = pairdata.relationships.quote_token.data.id.substr(
-    chain_id[chain].length + 1
-  );
+    // constructing an array of base token and quote token
+    path = [
+      web3.utils.toChecksumAddress(base_token),
+      web3.utils.toChecksumAddress(quote_token),
+    ];
 
-  // constructing an array of base token and quote token
-  path = [
-    web3.utils.toChecksumAddress(base_token),
-    web3.utils.toChecksumAddress(quote_token),
-  ];
-
-  return { path };
+    return { path };
+  }
 };
 
 module.exports = { geckoApi };
