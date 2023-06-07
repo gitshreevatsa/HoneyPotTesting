@@ -46,4 +46,5 @@ const geckoApi = async (token_address, chain) => {
   }
 };
 
+//https://api.geckoterminal.com/api/v2/networks/1/tokens/0xC9E6156c1Ab923D0aa1351650269F9FAa5859143/pools`
 module.exports = { geckoApi };

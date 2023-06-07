@@ -11,6 +11,11 @@ const providers = {
   137: polygon,
 };
 
+const dexproviders = {
+  1: "UniswapV2",
+  56: "PancakeV2",
+  137: "Quickswap",
+};
 // /**
 //  *
 //  * @param {addresses} base_address address of a respective token
@@ -19,40 +24,10 @@ const providers = {
 //  */
 
 const addresses = async (base_address, chain_id) => {
-  //  Block explorer api's for respective networks
-  // const baseTokenscans = {
-  //   1: `https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock=1&toBlock=999999999999999&address=${base_address}&topic0=0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef&page=1&offset=100&apikey=${process.env.etherscan}`,
-  //   56: `https://api.bscscan.com/api?module=logs&action=getLogs&fromBlock=1&toBlock=999999999999999&address=${base_address}&topic0=0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef&page=1&offset=100&apikey=${process.env.bscscan}`,
-  //   137: `https://api.polygonscan.com/api?module=logs&action=getLogs&fromBlock=1&toBlock=999999999999999&address=${base_address}&topic0=0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef&page=1&offset=100&apikey=${process.env.polygonscan}`,
-  // };
-
-  // // Indexing based on chain id
-  // const scanUrl = baseTokenscans[chain_id];
-  // console.log(
-  //   scanUrl,
-  //   "******************************************************"
-  // );
-  // // Fetching the data from the respective block explorer api
-  // const response = await axios.get(scanUrl);
-  // const jsonData = response.data || {};
-  // let list = jsonData["result"];
-  // const to = new Array()
-  // // Iterating through the list of transactions and adding the token holder addresses to a set
-  // list.forEach(async (element) => {
-  //   const web3 = providers[chain_id];
-  //   let a = web3.utils.toChecksumAddress(element["topics"][2].substr(26));
-  //   to.push(a);
-  // });
-  // console.log(
-  //   to,
-  //   "..................................................."
-  // );
-
-  // // to =  Array.from(to);
-  // return to;
   console.log(base_address, "base_address");
   const eoaHolders = new Array();
   const contractHolders = new Array();
+  const dexArray = new Array();
 
   const addressHolders = await axios.get(
     ` https://api.gopluslabs.io/api/v1/token_security/${chain_id}?contract_addresses=${base_address} `
@@ -60,6 +35,16 @@ const addresses = async (base_address, chain_id) => {
   if (addressHolders["data"]["result"] === {}) {
     return false, "Not a Token";
   } else {
+    const dex =
+      addressHolders["data"]["result"][base_address.toLowerCase()]["dex"];
+    if (dex == undefined) return false;
+    console.log(dex, "dex");
+    await dex.forEach((element) => {
+      if (element["name"] == dexproviders[chain_id]) {
+        dexArray.push(element["pair"]);
+      }
+    });
+
     const holderArray =
       addressHolders["data"]["result"][base_address.toLowerCase()]["holders"];
     const lpArray =
@@ -99,7 +84,9 @@ const addresses = async (base_address, chain_id) => {
     console.log("No EOA holders found");
     return false;
   } else {
-    return eoaHolders;
+    // Add the code snippet of tokenHolderChecker and send address to create a single ganacheConnection and a TokenDetails class
+
+    return { eoaHolders, dexArray };
   }
 };
 

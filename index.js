@@ -1,29 +1,3 @@
-/**
- *  Create a ganache simulator
- *  Create a endpoint to take in token address and chain
- *  Connect to Database
- */
-
-/**
- * Contains mainly pancake and uniswap simulations
- * Return the execution result
- */
-
-/**
- * To do:
- * - remove quote tokens from both accounts
- * - send in one base token to uniswap router, which is ethers formatted
- * - check how much quote token u get
- * - compare with getAmountsOut
- */
-
-// call gecko terminal for quote token
-// call goplus for pool address
-
-// design how to call for ganache hard fork based on chain id
-// based on hard fork, connect the right router contract
-// pass above 2 to simulator
-
 const express = require("express");
 const app = express();
 const port = 3000;
@@ -35,105 +9,155 @@ const { geckoApi } = require("./utils/gecko");
 const { populateEther } = require("./utils/balancePopulator");
 const { addresses } = require("./utils/addresses");
 const { tokenHolders } = require("./utils/tokenHolderChecker");
+const { getRouter } = require("./utils/uniswapV2");
+const { funding } = require("./utils/sendEther");
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
 app.get("/:id/:chain", async (req, res) => {
-  // Calling gecko terminal to fetch respective quote token details
-  const tokens = await geckoApi(req.params.id, req.params.chain);
+  // try to get chain
 
-  // add error handling if else statement
-  if (tokens.path.length == 0) {
-    res.send("Token pair Not found");
+  // Fetching the base and quote token holders
+  const baseAddressHolders = await addresses(req.params.id, req.params.chain);
+  console.log(baseAddressHolders, "baseAddressHolders");
+
+  const tokens = await getRouter(
+    baseAddressHolders.dexArray[0],
+    req.params.chain
+  );
+
+  // Uniswap V2 Pair caller function , then proceed with quoteTokenHolders addresses
+
+  const quoteAddressHolders = await addresses(
+    tokens.tokens[1],
+    req.params.chain
+  );
+
+  console.log(baseAddressHolders, quoteAddressHolders);
+  if (baseAddressHolders == false || quoteAddressHolders == false) {
+    res.send("No holders found");
   } else {
-    // Fetching the base and quote token holders
-    const baseAddressHolders = await addresses(
-      tokens.path[0],
-      req.params.chain
-    );
-    const quoteAddressHolders = await addresses(
-      tokens.path[1],
-      req.params.chain
+    // console.log(
+    //   baseAddressHolders.eoaHolders[0],
+    //   quoteAddressHolders.eoaHolders[0],
+    //   "###################################################"
+    // );
+    console.log(
+      tokens.tokens[0],
+      tokens.tokens[1],
+      "###################################################"
     );
 
-    console.log(baseAddressHolders, quoteAddressHolders);
-    if (baseAddressHolders == false || quoteAddressHolders == false) {
-      res.send("No holders found");
+    const tokenHoldersArray = await tokenHolders(
+      baseAddressHolders.eoaHolders,
+      quoteAddressHolders.eoaHolders
+    );
+
+    console.log(
+      tokenHoldersArray,
+      "tokenHoldersArray ++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+    );
+    // single ganache collection
+
+    const ganacheConnect = await ganacheConnection(
+      req.params.chain,
+      tokenHoldersArray.base_address_holder,
+      tokenHoldersArray.quote_address_holder
+    );
+    console.log(
+      "ganache connection ready ///////////////////////////////////////////////////"
+    );
+    await funding(ganacheConnect.web3, tokenHoldersArray.base_address_holder);
+    await funding(ganacheConnect.web3, tokenHoldersArray.quote_address_holder);
+
+    const token0 = await fetchTokenDetails(
+      ganacheConnect.web3,
+      tokens.tokens[0]
+    );
+
+    const token1 = await fetchTokenDetails(
+      ganacheConnect.web3,
+      tokens.tokens[1]
+    );
+
+    // // rechecking the holders
+
+    console.log(
+      tokenHoldersArray.base_address_holder,
+      tokens.tokens[0],
+      "###################################################"
+    );
+
+    console.log(
+      tokenHoldersArray.quote_address_holder,
+      tokens.tokens[1],
+      "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"
+    );
+
+    // // add error handling if else statement
+    const populator = await populateEther(
+      ganacheConnect.web3,
+      tokenHoldersArray.base_address_holder,
+      tokenHoldersArray.quote_address_holder,
+      tokens.tokens[0],
+      tokens.tokens[1],
+      token0,
+      token1
+    );
+
+    // //   // console.log(populator.baseTokenReciept, populator.quoteTokenReciept, "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+    // // Need to test swap : Swaps with router contract functions
+    // // add error handling if else statement
+
+    const taxCalc = await tokenTax(
+      ganacheConnect.web3,
+      ganacheConnect.swapRouterContract,
+      tokens.tokens[0],
+      tokens.tokens[1],
+      tokenHoldersArray.base_address_holder,
+      tokenHoldersArray.quote_address_holder,
+      1,
+      true,
+      300000,
+      1000000000,
+      tokenHoldersArray,
+      token0,
+      token1
+    );
+
+    let error;
+    if (taxCalc.buyTax == undefined || taxCalc.sell_tax == undefined) {
+      error = "HoneyPot Alert";
     } else {
-      console.log(
-        baseAddressHolders[0],
-        quoteAddressHolders[0],
-        "###################################################"
-      );
-      console.log(
-        tokens.path[0],
-        tokens.path[1],
-        "###################################################"
-      );
-
-      const ganacheConnect = await ganacheConnection(
-        req.params.chain,
-        baseAddressHolders[0],
-        quoteAddressHolders[0]
-      );
-
-      const tokenHoldersArray = await tokenHolders(
-        ganacheConnect.web3,
-        tokens.path,
-        baseAddressHolders,
-        quoteAddressHolders,
-        req.params.chain
-      );
-      // console.log(tokenHoldersArray.base_address_holder, tokenHoldersArray.quote_address_holder, "###################################################");
-
-      // // rechecking the holders
-      console.log(
-        tokenHoldersArray.base_address_holder,
-        tokens.path[0],
-        "###################################################"
-      );
-      console.log(
-        tokenHoldersArray.quote_address_holder,
-        tokens.path[1],
-        "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"
-      );
-
-      // // Connecting to ganache hard fork and unlocking the accounts
-      // const newConnection = await ganacheConnection(req.params.chain, tokenHoldersArray.base_address_holder, tokenHoldersArray.quote_address_holder);
-      // const web3Instance = newConnection.web3;
-      // const swapRouterContract = newConnection.swapRouterContract;
-
-      // // Populating the accounts with ether and tokens
-      // const populator =
-      console.log(tokenHoldersArray.ganacheConnect.web3);
-        // add error handling if else statement
-      await populateEther(
-        tokenHoldersArray.ganacheConnect.web3,
-        tokenHoldersArray.base_address_holder,
-        tokenHoldersArray.quote_address_holder,
-        tokens.path[0],
-        tokens.path[1]
-      );
-      //   // console.log(populator.baseTokenReciept, populator.quoteTokenReciept, "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-      // Need to test swap : Swaps with router contract functions
-      // add error handling if else statement
-      await tokenTax(
-        tokenHoldersArray.ganacheConnect.web3,
-        tokenHoldersArray.ganacheConnect.swapRouterContract,
-        tokens.path[0],
-        tokens.path[1],
-        tokenHoldersArray.base_address_holder,
-        tokenHoldersArray.quote_address_holder,
-        1,
-        true,
-        300000,
-        1000000000,
-        tokenHoldersArray.balances
-      );
-      res.send("Working");
+      error = "Not a HoneyPot ";
     }
+    res.status(200).json({
+      buy_tax: taxCalc.buyTax,
+      sell_tax: taxCalc.sell_tax,
+      error,
+    });
+    // if (
+    //   taxCalc.buy_tax_error != undefined ||
+    //   taxCalc.sell_tax_error != undefined
+    // ) {
+    //   if (
+    //     populator.base_token_transfer_error != undefined ||
+    //     populator.quote_token_transfer_error != undefined
+    //   ) {
+    //     res.json({
+    //       buy_tax: taxCalc.buyTax,
+    //       sell_tax: taxCalc.sell_tax,
+    //       transfer_tax: populator.base_token_transfer,
+    //     });
+    //   }
+    // } else {
+    //   res.json({
+    //     buy_tax_error: taxCalc.buy_tax_error,
+    //     sell_tax_error: taxCalc.sell_tax_error,
+    //   });
+    // }
   }
 });
 

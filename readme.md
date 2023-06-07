@@ -2,6 +2,10 @@
 
 This is a scam token detection engine built to test tokens on various swaps currently supporting Uniswap, PancakeSwap, QuickSwap.
 
+## API DOC:
+
+- Response format: JSON
+`{ buyTax, sellTax, error }`
 
 ## To Run and Test:
 

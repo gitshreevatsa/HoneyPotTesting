@@ -5,12 +5,12 @@
 const web3 = require("web3");
 
 const bsc = new web3(
-  "https://bsc-dataseed.binance.org/"
+  "https://thrilling-green-dawn.bsc.discover.quiknode.pro/bfa1dcba97e594cf960398bee14d82229ccd57b9/"
 );
 
 const eth = new web3(
 
-    "https://mainnet.infura.io/v3/8c5b2d0b0a9e4b6e8b0b3b2b0f2b3b2b"
+    "https://multi-dimensional-glitter.discover.quiknode.pro/fa76eedb7480f2b9b29497d2b1c04a2414dbdd3b/"
 
 );
 

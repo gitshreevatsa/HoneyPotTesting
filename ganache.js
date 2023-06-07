@@ -47,11 +47,12 @@ const ganacheConnection = async (network, buy_account, sell_account) => {
   try {
     ganacheProvider = ganache.provider(options);
     web3 = new Web3(ganacheProvider);
+
     swapRouterContract = new web3.eth.Contract(
       require("./abi/uniswap.json").abi,
       routerContract[network]
     );
-    console.log(swapRouterContract);
+
   } catch (e) {
     console.log(e);
     console.log("Error in connecting to ganache network");
