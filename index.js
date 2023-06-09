@@ -17,12 +17,29 @@ app.get("/", (req, res) => {
 });
 
 app.get("/:id/:chain", async (req, res) => {
+  let isHoneyPot,
+    buy_tax,
+    sell_tax,
+    buy_tax_error,
+    sell_tax_error,
+    transfer_tax_error,
+    error;
   // try to get chain
 
   // Fetching the base and quote token holders
   const baseAddressHolders = await addresses(req.params.id, req.params.chain);
   console.log(baseAddressHolders, "baseAddressHolders");
 
+  if (baseAddressHolders.dexArray.length == 0) {
+    res.json({
+      error: ["No dex found"],
+      isHoneyPot: 1,
+      buy_tax: undefined,
+      sell_tax: undefined,
+      pair: undefined,
+    });
+    return;
+  }
   const tokens = await getRouter(
     baseAddressHolders.dexArray[0],
     req.params.chain
@@ -37,7 +54,14 @@ app.get("/:id/:chain", async (req, res) => {
 
   console.log(baseAddressHolders, quoteAddressHolders);
   if (baseAddressHolders == false || quoteAddressHolders == false) {
-    res.send("No holders found");
+    res.json({
+      error: ["No EOA holders found"],
+      isHoneyPot: 1,
+      buy_tax: undefined,
+      sell_tax: undefined,
+      pair: tokens.tokens[1],
+      dex: baseAddressHolders.dexArray[0],
+    });
   } else {
     // console.log(
     //   baseAddressHolders.eoaHolders[0],
@@ -97,7 +121,7 @@ app.get("/:id/:chain", async (req, res) => {
     );
 
     // // add error handling if else statement
-    const populator = await populateEther(
+    await populateEther(
       ganacheConnect.web3,
       tokenHoldersArray.base_address_holder,
       tokenHoldersArray.quote_address_holder,
@@ -106,10 +130,6 @@ app.get("/:id/:chain", async (req, res) => {
       token0,
       token1
     );
-
-    // //   // console.log(populator.baseTokenReciept, populator.quoteTokenReciept, "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-    // // Need to test swap : Swaps with router contract functions
-    // // add error handling if else statement
 
     const taxCalc = await tokenTax(
       ganacheConnect.web3,
@@ -127,40 +147,85 @@ app.get("/:id/:chain", async (req, res) => {
       token1
     );
 
-    let error;
-    if (taxCalc.buyTax == undefined || taxCalc.sell_tax == undefined) {
-      error = "HoneyPot Alert";
+    console.log(taxCalc, "taxCalc");
+
+    const dexCollection = {
+      1: "UniswapV2",
+      56: "PancakeSwapV2",
+      137: "QuickSwap",
+    };
+
+    if (
+      taxCalc.buyTaxPercentage == undefined ||
+      taxCalc.sellTaxPercentage == undefined ||
+      taxCalc.sellTaxPercentage > 60 ||
+      taxCalc.buyTaxPercentage > 60
+    ) {
+      isHoneyPot = 1;
     } else {
-      error = "Not a HoneyPot ";
+      isHoneyPot = 0;
+      buy_tax = taxCalc.buyTaxPercentage;
+      sell_tax = taxCalc.sellTaxPercentage;
     }
+
+    if (
+      taxCalc.buy_tax_error == undefined ||
+      taxCalc.sell_tax_error == undefined
+    ) {
+      buy_tax_error = "";
+      sell_tax_error = "";
+      transfer_tax_error = "";
+      error = "";
+    }
+
+    if (
+      taxCalc.buy_tax_error !== undefined ||
+      taxCalc.sell_tax_error !== undefined
+    ) {
+      error = "Transfer Failed";
+    }
+
+    if (taxCalc.buyTax > 0.6) {
+      buy_tax_error = "High Buy Tax";
+      error = "High Buy Tax";
+    }
+
+    if (taxCalc.sell_tax > 0.6) {
+      sell_tax_error = "High Sell Tax";
+      error = "High Sell Tax";
+    }
+
     res.status(200).json({
-      buy_tax: taxCalc.buyTax,
-      sell_tax: taxCalc.sell_tax,
-      error,
+      buy_tax: buy_tax | undefined,
+      sell_tax: sell_tax | undefined,
+      transfer_tax: ((buy_tax + sell_tax) / 2) | undefined,
+      isHoneyPot: isHoneyPot,
+      isHoneyPotReason: [error],
+      dex: dexCollection[req.params.chain],
+      pair: [token0.tokenName, token1.tokenName],
     });
-    // if (
-    //   taxCalc.buy_tax_error != undefined ||
-    //   taxCalc.sell_tax_error != undefined
-    // ) {
-    //   if (
-    //     populator.base_token_transfer_error != undefined ||
-    //     populator.quote_token_transfer_error != undefined
-    //   ) {
-    //     res.json({
-    //       buy_tax: taxCalc.buyTax,
-    //       sell_tax: taxCalc.sell_tax,
-    //       transfer_tax: populator.base_token_transfer,
-    //     });
-    //   }
-    // } else {
-    //   res.json({
-    //     buy_tax_error: taxCalc.buy_tax_error,
-    //     sell_tax_error: taxCalc.sell_tax_error,
-    //   });
-    // }
   }
 });
 
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`);
 });
+
+/**
+ * {
+ *  buy_tax : number | undefined,
+ * sell_tax : number | undefined,
+ * transfer_tax: number | undefined,
+ * buy_tax_error: string | '',
+ * sell_tax_error: string | '',
+ * transfer_tax_error: string | '',
+ * isHoneypot: 1 | 0,
+ * dex: string | '',
+ * Pair: string | '',
+ * holderCount : number,
+ * gasUsed: number | undefined,
+ * buy_tax_error_decoded : string | '',
+ * sell_tax_error_decoded: string | '',
+ * transfer_tax_error_decoded: string | '',
+ * }
+ */

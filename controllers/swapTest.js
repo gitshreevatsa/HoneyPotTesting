@@ -4,6 +4,7 @@ const { BigNumber } = require("@ethersproject/bignumber");
 const { baseQuoteCall } = require("./baseQuoteTest");
 const { quoteBaseCall } = require("./quoteBaseTest");
 const { ethers } = require("ethers");
+const { transferTest } = require("./transferTest");
 // YET TO WORK ON THIS
 // add transferring here and return
 
@@ -26,8 +27,6 @@ const tokenTax = async (
   const Web3 = web3;
   const routerContract = router;
 
-
-
   console.log(
     quote_token_address,
     base_token_address,
@@ -42,7 +41,8 @@ const tokenTax = async (
 
   const base_token_details = token0;
   const base_token = base_token_details.contract;
-  let tx_params;
+  let tx_params, buyTaxPercentage, sellTaxPercentage;
+
   if (gas_limit) {
     tx_params = {
       gas: gas_limit,
@@ -51,6 +51,7 @@ const tokenTax = async (
   } else {
     tx_params = {};
   }
+  let buyTax;
   console.log(
     await quote_token.methods.balanceOf(routerContract._address).call(),
     "router balance of ",
@@ -128,38 +129,47 @@ const tokenTax = async (
   /**
    * Buy Tax
    */
-
-  await baseQuoteCall(amountIn, path, router, buy_account);
-
-  const receivedAmount = await quote_token.methods
-    .balanceOf(buy_account)
-    .call();
-
-  console.log("Received amount", receivedAmount);
-
   let uniswap_price = await routerContract.methods
     .getAmountsOut(amountIn, path)
     .call();
 
-  if (uniswap_price[0] == amountIn) {
-    console.error("Correct input amount", amountIn, uniswap_price[0]);
-  }
-
-  let buyTax =
-    (await quote_token_details.convertToDecimals(uniswap_price[1])) -
-    (await quote_token_details.convertToDecimals(receivedAmount));
-  // / await quote_token_details.convertToDecimals(uniswap_price[1]);
-
-  console.log(uniswap_price);
-
-  console.log(
-    receivedAmount,
-    " - Recieved amount",
-    uniswap_price[1],
-    " - Uniswap price"
+  const baseQuote = await baseQuoteCall(
+    amountIn,
+    path,
+    router,
+    buy_account,
+    web3
   );
 
-  console.log("Buy Tax Percentage", buyTax * 100, "%");
+  console.log(baseQuote, "base quote");
+
+  if (baseQuote.error !== "") {
+    buy_tax_error = baseQuote.error;
+    console.log("STOPPING HERE");
+  } else {
+    const receivedAmount = await quote_token.methods
+      .balanceOf(buy_account)
+      .call();
+
+    console.log("Received amount", receivedAmount);
+
+    if (uniswap_price[0] == amountIn) {
+      console.error("Correct input amount", amountIn, uniswap_price[0]);
+    }
+
+    buyTax = (uniswap_price[1] - receivedAmount) / uniswap_price[1];
+
+    console.log(uniswap_price);
+
+    console.log(
+      receivedAmount,
+      " - Recieved amount",
+      uniswap_price[1],
+      " - Uniswap price"
+    );
+
+    console.log("Buy Tax Percentage", buyTax * 100, "%");
+  }
 
   /**
    * Sell Tax
@@ -167,49 +177,83 @@ const tokenTax = async (
   console.log(quote_token_details.tokenName, "quote token name");
 
   let newpath = [quote_token._address, base_token._address];
-  const recieved_amount_by_seller = await quote_token.methods
+  let recieved_amount_by_seller = await quote_token.methods
     .balanceOf(sell_account)
     .call();
 
   console.log("recieved amount by seller : ", recieved_amount_by_seller);
 
   let sell_tax = 0;
-  let sell_tax_percentage = 0;
 
-  await quoteBaseCall(recieved_amount_by_seller, newpath, router, sell_account);
-  uniswap_price = await router.methods
-    .getAmountsOut(recieved_amount_by_seller, path)
+  let uniswap_price_erc = await router.methods
+    .getAmountsOut(recieved_amount_by_seller, newpath)
     .call();
 
-  const recieved_Base_Amount = await base_token.methods
-    .balanceOf(sell_account)
-    .call();
-
-  console.log("recieved base amount", recieved_Base_Amount);
-  console.log("uniswap price", uniswap_price);
-  console.log(
-    "uniswap price of base token",
-    await base_token_details.convertToDecimals(uniswap_price[1])
-  );
-  console.log(
-    "Base token decimals",
-    await base_token_details.convertToDecimals(recieved_Base_Amount)
+  let uniswap_price_native = await router.methods.getAmountsOut(
+    await web3.eth.getBalance(sell_account),
+    newpath
   );
 
-  sell_tax =
-    ((await base_token_details.convertToDecimals(uniswap_price[1])) -
-      (await base_token_details.convertToDecimals(recieved_Base_Amount))) /
-    (await base_token_details.convertToDecimals(uniswap_price[1]));
+  const quoteBase = await quoteBaseCall(
+    recieved_amount_by_seller,
+    newpath,
+    router,
+    sell_account,
+    quote_token_details,
+    web3
+  );
 
-  console.log("sell tax", sell_tax);
-  sell_tax_percentage = sell_tax * 100;
-  console.log("sell tax percentage", sell_tax_percentage);
+  if (quoteBase.nativeERC.erc === true) {
+    uniswap_price = uniswap_price_erc;
+  } else if (quoteBase.nativeERC.native === true) {
+    uniswap_price = uniswap_price_native;
+  }
 
-  if (buyTax <= 0) buyTax = 0;
-  if (sell_tax <= 0) sell_tax = 0;
-  console.log("buy tax %", buyTax * 100);
-  console.log("sell tax %", sell_tax * 100);
-  return { buyTax, sell_tax };
+  if (quoteBase.error === "") {
+    sell_tax_error = quoteBase.error;
+  } else {
+    const recieved_Base_Amount = await base_token.methods
+      .balanceOf(sell_account)
+      .call();
+
+    console.log("recieved base amount", recieved_Base_Amount);
+    console.log("uniswap price", uniswap_price);
+    console.log(
+      "uniswap price of base token",
+      await base_token_details.convertToDecimals(uniswap_price[1])
+    );
+    console.log(
+      "Base token decimals",
+      await base_token_details.convertToDecimals(recieved_Base_Amount)
+    );
+
+    sell_tax = (uniswap_price[1] - recieved_Base_Amount) / uniswap_price[1];
+
+    console.log("sell tax", sell_tax);
+    sell_tax_percentage = sell_tax * 100;
+    console.log("sell tax percentage", sell_tax_percentage);
+
+    if (buyTax <= 0) buyTax = 0;
+    if (sell_tax <= 0) sell_tax = 0;
+    buyTaxPercentage = buyTax * 100;
+    sellTaxPercentage = sell_tax * 100;
+    console.log("buy tax %", buyTax * 100);
+    console.log("sell tax %", sell_tax * 100);
+  }
+  console.log(await web3.eth.getBalance(sell_account), "sell account balance");
+  // const transferTax = await transferTest(sell_account, base_token_details);
+
+  // let transferReturn = transferTax.transferTax;
+  // let transferError = transferTax.transferError;
+  return {
+    buyTaxPercentage,
+    sellTaxPercentage,
+    
+    buy_tax_error,
+    sell_tax_error,
+    // transferReturn,
+    // transferError,
+  };
 };
 
 module.exports = { tokenTax };

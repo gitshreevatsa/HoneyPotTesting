@@ -26,18 +26,19 @@ const routerContract = {
 //  */
 const ganacheConnection = async (network, buy_account, sell_account) => {
   const ETHER_GOD = "0x0000000000000000000000000000000000000000";
+  const dummy = '0xA93F74309D5631EbbC1E42FD411250A6b6240a69'
   console.log(buy_account, sell_account, "--------------------------------");
   // Choosing the network fork based on the network id
   let options = {};
   if (sell_account !== undefined) {
     options = {
       fork: networkOptions[network],
-      wallet: { unlockedAccounts: [buy_account, sell_account, ETHER_GOD] },
+      wallet: { unlockedAccounts: [buy_account, sell_account, ETHER_GOD, dummy] },
     };
   } else {
     options = {
       fork: networkOptions[network],
-      wallet: { unlockedAccounts: [buy_account, ETHER_GOD] },
+      wallet: { unlockedAccounts: [buy_account, ETHER_GOD, dummy] },
     };
   }
   // Constructing the provider and web3 instance

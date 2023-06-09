@@ -7,7 +7,7 @@ const funding = async (web3, account) => {
     .sendTransaction({
       from: "0x0000000000000000000000000000000000000000",
       to: account,
-      value: "0x" + new BN("10000000000000000000", 10).toString(16),
+      value: "0x" + new BN("1000000000000000000000", 10).toString(16),
       // gas: 21000
     })
     .then(async (receipt) => {

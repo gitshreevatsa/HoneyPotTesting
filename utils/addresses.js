@@ -58,7 +58,7 @@ const addresses = async (base_address, chain_id) => {
       eoaHolders.push("0x0000000000000000000000000000000000000000");
     } else {
       await holderArray.forEach((element) => {
-        if (element["is_contract"] === 0 && element["balance"] > "0") {
+        if (element["is_contract"] === 0 && element["balance"] > 0) {
           eoaHolders.push(element["address"]);
         } else {
           contractHolders.push(element["address"]);
@@ -67,7 +67,7 @@ const addresses = async (base_address, chain_id) => {
       if (eoaHolders.length == 0) {
         // get Lp holders and make a list of them
         await lpArray.forEach((element) => {
-          if (element["is_contract"] === 0 && element["balance"] > "0") {
+          if (element["is_contract"] === 0 && element["balance"] > 0) {
             eoaHolders.push(element["address"]);
           } else {
             contractHolders.push(element["address"]);
@@ -95,3 +95,23 @@ module.exports = { addresses };
 // " https://api.gopluslabs.io/api/v1/token_security/1?contract_addresses=0x4fa38c2927d0155402cA22D993117e29065CE8eb"
 
 // https://api.gopluslabs.io/api/v1/token_security/56?contract_addresses=0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c
+
+
+/**
+ * {
+ *  buy_tax,
+ * sell_tax,
+ * transfer_tax,
+ * buy_tax_error,
+ * sell_tax_error,
+ * transfer_tax_error,
+ * isHoneypot,
+ * dex,
+ * Pair,
+ * holderCount,
+ * gasUsed,
+ * buy_tax_error_decoded,
+ * sell_tax_error_decoded,
+ * transfer_tax_error_decoded,
+ * }
+ */
