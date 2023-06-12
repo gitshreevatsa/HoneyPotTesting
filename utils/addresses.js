@@ -40,6 +40,7 @@ const addresses = async (base_address, chain_id, copyAddress) => {
   if (addressHolders["data"]["result"] === {}) {
     return false, "Not a Token";
   } else {
+    console.log(addressHolders["data"]["result"][base_address.toLowerCase()]);
     const dex =
       addressHolders["data"]["result"][base_address.toLowerCase()]["dex"];
     if (dex == undefined) return false;
@@ -59,12 +60,22 @@ const addresses = async (base_address, chain_id, copyAddress) => {
       addressHolders["data"]["result"][base_address.toLowerCase()][
         "lp_holders"
       ];
-
+    const ownerHolder =
+      addressHolders["data"]["result"][base_address.toLowerCase()][
+        "creator_address"
+      ];
+    const ownerBalane =
+      addressHolders["data"]["result"][base_address.toLowerCase()][
+        "creator_balance"
+      ];
+    console.log(ownerBalane, "OWNER BALANCE");
+    console.log(ownerHolder, "OWNER");
     // console.log(holderArray, "holderArray");
 
-    if (holderArray == undefined) {
+    if (holderArray == undefined && ownerBalane === "0") {
       eoaHolders.push("0x0000000000000000000000000000000000000000");
-    } else {
+      console.log("holders are pushed here");
+    } else if (holderArray) {
       await holderArray.forEach((element) => {
         if (element["is_contract"] === 0 && element["balance"] > 0) {
           eoaHolders.push(element["address"]);
@@ -93,9 +104,13 @@ const addresses = async (base_address, chain_id, copyAddress) => {
             contractHolders.push(element["address"]);
           }
         });
+        console.log("LP HOLDER PUSHED");
       }
+    } else if (eoaHolders.length == 0 && ownerBalane !== "0") {
+      eoaHolders.push(ownerHolder);
     }
   }
+
   // console.log(eoaHolders, "EOAholderArray");
   // console.log(contractHolders, "ContractholderArray");
   // console.log(addressHolders['data']['result'], "addressHolders");

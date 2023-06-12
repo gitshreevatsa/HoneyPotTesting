@@ -103,7 +103,7 @@ const tokenTax = async (
     console.log("error in approving quote token");
     console.log(err);
     approve_error = err.message;
-    return approve_error;
+    // return approve_error;
   }
 
   console.log(

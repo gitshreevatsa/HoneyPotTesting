@@ -191,6 +191,7 @@ app.get("/:id/:chain", async (req, res) => {
         if (
           taxCalc.buyTaxPercentage == undefined ||
           taxCalc.sellTaxPercentage == undefined ||
+          // taxCalc.approve_error == undefined ||
           taxCalc.sellTaxPercentage > 60 ||
           taxCalc.buyTaxPercentage > 60
         ) {
@@ -201,16 +202,6 @@ app.get("/:id/:chain", async (req, res) => {
           buy_tax = taxCalc.buyTaxPercentage;
           sell_tax = taxCalc.sellTaxPercentage;
         }
-
-        // if (
-        //   taxCalc.buy_tax_error == undefined ||
-        //   taxCalc.sell_tax_error == undefined
-        // ) {
-        //   buy_tax_error = "";
-        //   sell_tax_error = "";
-        //   transfer_tax_error = "";
-        //   error = "";
-        // }
 
         if (
           taxCalc.buy_tax_error !== undefined ||
