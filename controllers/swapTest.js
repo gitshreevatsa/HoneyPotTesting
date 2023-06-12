@@ -51,7 +51,7 @@ const tokenTax = async (
   } else {
     tx_params = {};
   }
-  let buyTax = 0.00;
+  let buyTax = 0.0;
   console.log(
     await quote_token.methods.balanceOf(routerContract._address).call(),
     "router balance of ",
@@ -103,6 +103,7 @@ const tokenTax = async (
     console.log("error in approving quote token");
     console.log(err);
     approve_error = err.message;
+    return approve_error;
   }
 
   console.log(
@@ -112,6 +113,7 @@ const tokenTax = async (
       .call(),
     "============================="
   );
+
   console.log(
     "=============================",
     await quote_token.methods
@@ -183,7 +185,7 @@ const tokenTax = async (
 
   console.log("recieved amount by seller : ", recieved_amount_by_seller);
 
-  let sell_tax = 0.00;
+  let sell_tax = 0.0;
 
   let uniswap_price_erc = await router.methods
     .getAmountsOut(recieved_amount_by_seller, newpath)
@@ -248,7 +250,7 @@ const tokenTax = async (
   return {
     buyTaxPercentage,
     sellTaxPercentage,
-
+    approve_error,
     buy_tax_error,
     sell_tax_error,
     // transferReturn,

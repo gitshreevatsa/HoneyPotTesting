@@ -214,7 +214,8 @@ app.get("/:id/:chain", async (req, res) => {
 
         if (
           taxCalc.buy_tax_error !== undefined ||
-          taxCalc.sell_tax_error !== undefined
+          taxCalc.sell_tax_error !== undefined ||
+          taxCalc.approve_error !== undefined
         ) {
           error = "Transfer Failed";
           isHoneyPot = 1;

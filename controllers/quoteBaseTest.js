@@ -56,27 +56,27 @@ const quoteBaseCall = async (
     console.log(err.message);
     functionError.swapExactTokensForTokensSupportingFeeOnTransferTokens =
       err.message;
-    const txhash = err.receipt.transactionHash;
-    const tx = await ethers.web3.getTransaction(txhash);
-    console.log(tx);
-    const response = await ethers.web3.call(
-      {
-        to: tx.to,
-        from: tx.from,
-        nonce: tx.nonce,
-        gasLimit: tx.gasLimit,
-        gasPrice: tx.gasPrice,
-        data: tx.data,
-        value: tx.value,
-        chainId: tx.chainId,
-        type: tx.type ?? undefined,
-        accessList: tx.accessList,
-      },
-      tx.blockNumber
-    );
+    // const txhash = err.receipt.transactionHash;
+    // const tx = await ethers.web3.getTransaction(txhash);
+    // console.log(tx);
+    // const response = await ethers.web3.call(
+    //   {
+    //     to: tx.to,
+    //     from: tx.from,
+    //     nonce: tx.nonce,
+    //     gasLimit: tx.gasLimit,
+    //     gasPrice: tx.gasPrice,
+    //     data: tx.data,
+    //     value: tx.value,
+    //     chainId: tx.chainId,
+    //     type: tx.type ?? undefined,
+    //     accessList: tx.accessList,
+    //   },
+    //   tx.blockNumber
+    // );
 
-    let reason = ethers.utils.toUtf8String("0x" + response.substring(138));
-    console.log(reason);
+    // let reason = ethers.utils.toUtf8String("0x" + response.substring(138));
+    // console.log(reason);
 
     try {
       await routerContract.methods
