@@ -1,5 +1,7 @@
 const BN = require("bn.js");
 const { getRevertReason } = require("../utils/errorReason");
+const {ethers} = require("ethers");
+const { default: Web3 } = require("web3");
 
 let functionJson = {
   swapExactTokensForETHSupportingFeeOnTransferTokens: false,
@@ -38,8 +40,11 @@ const baseQuoteCall = async (amountIn, path, routerContract, account, web3) => {
       err.message;
     console.log(err.receipt);
 
-    const tx = await web3.eth.getTransaction(err.receipt.transactionHash);
-    console.log("tx", tx);
+    const txhash = err.receipt.transactionHash;
+
+    const tx = await web3.eth.getTransaction(txhash);
+    console.log(tx);
+
 
     // let result = await web3.eth.call(tx, tx.blockNumber)
     // console.log("result", result);

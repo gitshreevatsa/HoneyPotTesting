@@ -44,7 +44,8 @@ const addresses = async (base_address, chain_id) => {
         dexArray.push(element["pair"]);
       }
     });
-
+    // change
+    console.log(dexArray);
     const holderArray =
       addressHolders["data"]["result"][base_address.toLowerCase()]["holders"];
     const lpArray =

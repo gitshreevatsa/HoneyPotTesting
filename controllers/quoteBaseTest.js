@@ -1,5 +1,6 @@
 const BN = require("bn.js");
 const { ethers } = require("ethers");
+const { eth } = require("../utils/providers");
 // account with wbnb : sell_account
 
 let functionJson = {
@@ -55,6 +56,27 @@ const quoteBaseCall = async (
     console.log(err.message);
     functionError.swapExactTokensForTokensSupportingFeeOnTransferTokens =
       err.message;
+    const txhash = err.receipt.transactionHash;
+    const tx = await ethers.web3.getTransaction(txhash);
+    console.log(tx);
+    const response = await ethers.web3.call(
+      {
+        to: tx.to,
+        from: tx.from,
+        nonce: tx.nonce,
+        gasLimit: tx.gasLimit,
+        gasPrice: tx.gasPrice,
+        data: tx.data,
+        value: tx.value,
+        chainId: tx.chainId,
+        type: tx.type ?? undefined,
+        accessList: tx.accessList,
+      },
+      tx.blockNumber
+    );
+
+    let reason = ethers.utils.toUtf8String("0x" + response.substring(138));
+    console.log(reason);
 
     try {
       await routerContract.methods
@@ -129,14 +151,14 @@ const quoteBaseCall = async (
   let returnJson = {};
   for (const [key, value] of Object.entries(functionJson)) {
     if (value) {
-      returnJson['functionCall'] = key;
-      returnJson['error'] = '';
+      returnJson["functionCall"] = key;
+      returnJson["error"] = "";
     } else {
-      returnJson['error'] = functionError[key];
+      returnJson["error"] = functionError[key];
     }
   }
 
-  return {returnJson, nativeERC};
+  return { returnJson, nativeERC };
 };
 
 module.exports = { quoteBaseCall };

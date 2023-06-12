@@ -51,7 +51,7 @@ const tokenTax = async (
   } else {
     tx_params = {};
   }
-  let buyTax;
+  let buyTax = 0.00;
   console.log(
     await quote_token.methods.balanceOf(routerContract._address).call(),
     "router balance of ",
@@ -183,7 +183,7 @@ const tokenTax = async (
 
   console.log("recieved amount by seller : ", recieved_amount_by_seller);
 
-  let sell_tax = 0;
+  let sell_tax = 0.00;
 
   let uniswap_price_erc = await router.methods
     .getAmountsOut(recieved_amount_by_seller, newpath)
@@ -248,7 +248,7 @@ const tokenTax = async (
   return {
     buyTaxPercentage,
     sellTaxPercentage,
-    
+
     buy_tax_error,
     sell_tax_error,
     // transferReturn,
