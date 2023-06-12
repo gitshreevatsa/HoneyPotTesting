@@ -47,12 +47,11 @@ const populateEther = async (
     .balanceOf(sell_account)
     .call();
 
-    console.log(buy_account_balance, sell_account_balance, "+++++++++++++++++");
+  console.log(buy_account_balance, sell_account_balance, "+++++++++++++++++");
 
-  let quote_token_transfer_error,
-    base_token_transfer_error;
+  let quote_token_transfer_error, base_token_transfer_error;
 
-  if (buy_account_balance !== '0') {
+  if (buy_account_balance !== "0") {
     console.log("Accounts already funded with quote token");
     try {
       await quote_token_details.contract.methods
@@ -67,7 +66,7 @@ const populateEther = async (
     }
   }
 
-  if (sell_account_balance !== '0') {
+  if (sell_account_balance !== "0") {
     console.log("Accounts already funded with base token");
     console.log(sell_account_balance, "sell_account_balance");
     try {
@@ -99,7 +98,7 @@ const populateEther = async (
     await quote_token_details.contract.methods.balanceOf(sell_account).call(),
     "QUOTE TOKEN : SELL ACCOUNT"
   );
-
+  return { base_token_transfer_error, quote_token_transfer_error };
 };
 
 module.exports = { populateEther };

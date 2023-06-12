@@ -160,7 +160,7 @@ app.get("/:id/:chain", async (req, res) => {
         );
 
         // // add error handling if else statement
-        await populateEther(
+        const sendEther = await populateEther(
           ganacheConnect.web3,
           tokenHoldersArray.base_address_holder,
           tokenHoldersArray.quote_address_holder,
@@ -170,71 +170,94 @@ app.get("/:id/:chain", async (req, res) => {
           token1
         );
 
-        const taxCalc = await tokenTax(
-          ganacheConnect.web3,
-          ganacheConnect.swapRouterContract,
-          tokens.tokens[0],
-          tokens.tokens[1],
-          tokenHoldersArray.base_address_holder,
-          tokenHoldersArray.quote_address_holder,
-          1,
-          true,
-          300000,
-          1000000000,
-          tokenHoldersArray,
-          token0,
-          token1
-        );
-
-        console.log(taxCalc, "taxCalc");
-
         if (
-          taxCalc.buyTaxPercentage == undefined ||
-          taxCalc.sellTaxPercentage == undefined ||
-          // taxCalc.approve_error == undefined ||
-          taxCalc.sellTaxPercentage > 60 ||
-          taxCalc.buyTaxPercentage > 60
+          sendEther.base_token_transfer_error != undefined ||
+          sendEther.quote_token_transfer_error != undefined
         ) {
-          isHoneyPot = 1;
-          error = "HIGH TAX";
+          res.json({
+            buy_tax: undefined,
+            sell_tax: undefined,
+            transfer_tax: undefined,
+            isHoneyPot: 1,
+            isHoneyPotReason: [
+              sendEther.base_token_transfer_error |
+                sendEther.quote_token_transfer_error,
+            ],
+            dex: dexCollection[req.params.chain],
+            pair: [req.params.id, token1.tokenName],
+          });
         } else {
-          isHoneyPot = 0;
-          buy_tax = taxCalc.buyTaxPercentage;
-          sell_tax = taxCalc.sellTaxPercentage;
-        }
+          const taxCalc = await tokenTax(
+            ganacheConnect.web3,
+            ganacheConnect.swapRouterContract,
+            tokens.tokens[0],
+            tokens.tokens[1],
+            tokenHoldersArray.base_address_holder,
+            tokenHoldersArray.quote_address_holder,
+            1,
+            true,
+            300000,
+            1000000000,
+            tokenHoldersArray,
+            token0,
+            token1
+          );
 
-        if (
-          taxCalc.buy_tax_error !== undefined ||
-          taxCalc.sell_tax_error !== undefined ||
-          taxCalc.approve_error !== undefined
-        ) {
-          error = "Transfer Failed";
-          isHoneyPot = 1;
-        }
+          console.log(taxCalc, "taxCalc");
 
-        if (taxCalc.buyTax > 60) {
-          buy_tax_error = "High Buy Tax";
-          error = "High Buy Tax";
-        }
+          if (
+            taxCalc.buyTaxPercentage == undefined ||
+            taxCalc.sellTaxPercentage == undefined ||
+            // taxCalc.approve_error == undefined ||
+            taxCalc.sellTaxPercentage > 60 ||
+            taxCalc.buyTaxPercentage > 60
+          ) {
+            isHoneyPot = 1;
+            error = "HIGH TAX";
+          } else {
+            isHoneyPot = 0;
+            buy_tax = taxCalc.buyTaxPercentage;
+            sell_tax = taxCalc.sellTaxPercentage;
+          }
 
-        if (taxCalc.sell_tax > 60) {
-          sell_tax_error = "High Sell Tax";
-          error = "High Sell Tax";
-        }
+          if(taxCalc.approve_error != undefined){
+            isHoneyPot = 1;
+            error = "APPROVE FAILED"
+          }
 
-        res.status(200).json({
-          buy_tax: buy_tax | undefined,
-          sell_tax: sell_tax | undefined,
-          transfer_tax: ((buy_tax + sell_tax) / 2) | undefined,
-          isHoneyPot: isHoneyPot,
-          isHoneyPotReason: [error],
-          dex: dexCollection[req.params.chain],
-          pair: [token0.tokenName, token1.tokenName],
-        });
-        if (stableCoins.includes(req.params.id.toLocaleLowerCase())) {
-          console.log(cache.get(req.params.id));
-        } else {
-          cache.set(req.params.id, tokenHoldersArray.quote_address_holder);
+          if (
+            taxCalc.buy_tax_error !== undefined ||
+            taxCalc.sell_tax_error !== undefined ||
+            taxCalc.approve_error !== undefined
+          ) {
+            error = "Transfer Failed";
+            isHoneyPot = 1;
+          }
+
+          if (taxCalc.buyTax > 60) {
+            buy_tax_error = "High Buy Tax";
+            error = "High Buy Tax";
+          }
+
+          if (taxCalc.sell_tax > 60) {
+            sell_tax_error = "High Sell Tax";
+            error = "High Sell Tax";
+          }
+
+          res.status(200).json({
+            buy_tax: sell_tax | undefined,
+            sell_tax: buy_tax | undefined,
+            transfer_tax: ((buy_tax + sell_tax) / 2) | undefined,
+            isHoneyPot: isHoneyPot,
+            isHoneyPotReason: [error],
+            dex: dexCollection[req.params.chain],
+            pair: [token0.tokenName, token1.tokenName],
+          });
+          if (stableCoins.includes(req.params.id.toLocaleLowerCase())) {
+            console.log(cache.get(req.params.id));
+          } else {
+            cache.set(req.params.id, tokenHoldersArray.quote_address_holder);
+          }
         }
       }
     }
