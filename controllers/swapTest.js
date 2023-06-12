@@ -230,8 +230,8 @@ const tokenTax = async (
     sell_tax = (uniswap_price[1] - recieved_Base_Amount) / uniswap_price[1];
 
     console.log("sell tax", sell_tax);
-    sell_tax_percentage = sell_tax * 100;
-    console.log("sell tax percentage", sell_tax_percentage);
+    sellTaxPercentage = sell_tax * 100;
+    console.log("sell tax percentage", sellTaxPercentage);
 
     if (buyTax <= 0) buyTax = 0;
     if (sell_tax <= 0) sell_tax = 0;

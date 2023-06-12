@@ -1,6 +1,8 @@
 const express = require("express");
+const NodeCache = require("node-cache");
 const app = express();
 const port = 3000;
+const cache = new NodeCache();
 
 const { ganacheConnection } = require("./ganache");
 const { fetchTokenDetails, TokenDetails } = require("./utils/fetchErcDetails");
@@ -12,29 +14,43 @@ const { tokenHolders } = require("./utils/tokenHolderChecker");
 const { getRouter } = require("./utils/uniswapV2");
 const { funding } = require("./utils/sendEther");
 
+const dexCollection = {
+  1: "UniswapV2",
+  56: "PancakeSwapV2",
+  137: "QuickSwap",
+};
+
+const stableCoins = [
+  "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+  "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c",
+  "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270",
+];
+
+const supportedChains = ['1', '56', '137']
+
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
 app.get("/:id/:chain", async (req, res) => {
-  let isHoneyPot,
-    buy_tax,
-    sell_tax,
-    buy_tax_error,
-    sell_tax_error,
-    transfer_tax_error,
-    error;
+
+  if(!(supportedChains.includes(req.params.chain))){
+    res.status(400).json({
+      error: [
+        "Wrong Chain ID"
+      ]
+    })
+  }
+  let isHoneyPot, buy_tax, sell_tax, error, stableToken;
   // try to get chain
 
   // Fetching the base and quote token holders
+  if (stableCoins.includes(req.params.id.toLocaleLowerCase())) {
+    stableToken = cache.get(req.params.id);
+    console.log(stableToken, "*********************************************************************************");
+  }
 
-  const dexCollection = {
-    1: "UniswapV2",
-    56: "PancakeSwapV2",
-    137: "QuickSwap",
-  };
-
-  const baseAddressHolders = await addresses(req.params.id, req.params.chain);
+  const baseAddressHolders = await addresses(req.params.id, req.params.chain, undefined);
   console.log(baseAddressHolders, "baseAddressHolders");
 
   if (baseAddressHolders === false || baseAddressHolders.dexArray.length == 0) {
@@ -46,6 +62,7 @@ app.get("/:id/:chain", async (req, res) => {
       pair: "",
     });
   } else {
+    console.log(baseAddressHolders.dexArray[0], "PAIR CONTRACT");
     const tokens = await getRouter(
       baseAddressHolders.dexArray[0],
       req.params.chain
@@ -55,7 +72,8 @@ app.get("/:id/:chain", async (req, res) => {
 
     const quoteAddressHolders = await addresses(
       tokens.tokens[1],
-      req.params.chain
+      req.params.chain,
+      baseAddressHolders.eoaHolders
     );
 
     console.log(baseAddressHolders, quoteAddressHolders);
@@ -70,7 +88,7 @@ app.get("/:id/:chain", async (req, res) => {
       });
     } else {
       console.log(
-        tokens.tokens[0],
+        await tokens.tokens[0],
         tokens.tokens[1],
         "###################################################"
       );
@@ -85,6 +103,10 @@ app.get("/:id/:chain", async (req, res) => {
         "tokenHoldersArray ++++++++++++++++++++++++++++++++++++++++++++++++++++++"
       );
       // single ganache collection
+
+      if (stableCoins.includes(req.params.id.toLocaleLowerCase()) && stableToken !== undefined) {
+        tokenHoldersArray.quote_address_holder = stableToken;
+      }
 
       const ganacheConnect = await ganacheConnection(
         req.params.chain,
@@ -160,7 +182,7 @@ app.get("/:id/:chain", async (req, res) => {
         taxCalc.buyTaxPercentage > 60
       ) {
         isHoneyPot = 1;
-        error = 'HIGH TAX'
+        error = "HIGH TAX";
       } else {
         isHoneyPot = 0;
         buy_tax = taxCalc.buyTaxPercentage;
@@ -182,6 +204,7 @@ app.get("/:id/:chain", async (req, res) => {
         taxCalc.sell_tax_error !== undefined
       ) {
         error = "Transfer Failed";
+        isHoneyPot = 1;
       }
 
       if (taxCalc.buyTax > 60) {
@@ -203,6 +226,11 @@ app.get("/:id/:chain", async (req, res) => {
         dex: dexCollection[req.params.chain],
         pair: [token0.tokenName, token1.tokenName],
       });
+      if (stableCoins.includes(req.params.id.toLocaleLowerCase())) {
+        console.log(cache.get(req.params.id));
+      } else {
+        cache.set(req.params.id, tokenHoldersArray.quote_address_holder);
+      }
     }
   }
 });

@@ -3,6 +3,7 @@ require("dotenv").config();
 const web3 = require("web3");
 const { bsc, eth, polygon } = require("./providers");
 const { fetchTokenDetails } = require("./fetchErcDetails");
+const { arrayChecker } = require("./arrayChecker");
 const sdk = require("api")("@chainbase/v1.0#es1jjlg6g4o2b");
 
 const providers = {
@@ -23,29 +24,35 @@ const dexproviders = {
 //  * @returns {Array} returns the token holder addresses of the respective token
 //  */
 
-const addresses = async (base_address, chain_id) => {
+const addresses = async (base_address, chain_id, copyAddress) => {
   console.log(base_address, "base_address");
-  const eoaHolders = new Array();
+  console.log(copyAddress);
+
+  let eoaHolders = new Array();
   const contractHolders = new Array();
   const dexArray = new Array();
 
   const addressHolders = await axios.get(
     ` https://api.gopluslabs.io/api/v1/token_security/${chain_id}?contract_addresses=${base_address} `
   );
+
+  // first taking the dex
   if (addressHolders["data"]["result"] === {}) {
     return false, "Not a Token";
   } else {
     const dex =
       addressHolders["data"]["result"][base_address.toLowerCase()]["dex"];
     if (dex == undefined) return false;
-    console.log(dex, "dex");
+    // console.log(dex, "dex");
     await dex.forEach((element) => {
       if (element["name"] == dexproviders[chain_id]) {
         dexArray.push(element["pair"]);
       }
     });
     // change
-    console.log(dexArray);
+    // console.log(dexArray);
+
+    // second :  taking the holder array and lp array
     const holderArray =
       addressHolders["data"]["result"][base_address.toLowerCase()]["holders"];
     const lpArray =
@@ -53,7 +60,7 @@ const addresses = async (base_address, chain_id) => {
         "lp_holders"
       ];
 
-    console.log(holderArray, "holderArray");
+    // console.log(holderArray, "holderArray");
 
     if (holderArray == undefined) {
       eoaHolders.push("0x0000000000000000000000000000000000000000");
@@ -65,21 +72,32 @@ const addresses = async (base_address, chain_id) => {
           contractHolders.push(element["address"]);
         }
       });
-      if (eoaHolders.length == 0) {
+
+      if (copyAddress === undefined) {
+        copyAddress = [];
+      }
+      if (
+        // a function to comapre arrays and return true or false
+        arrayChecker(eoaHolders, copyAddress) ||
+        eoaHolders.length == 0
+      ) {
         // get Lp holders and make a list of them
+        console.log(
+          "CONTROL TRANSFERRED !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        );
         await lpArray.forEach((element) => {
           if (element["is_contract"] === 0 && element["balance"] > 0) {
+            eoaHolders = [];
             eoaHolders.push(element["address"]);
           } else {
             contractHolders.push(element["address"]);
           }
         });
-        console.log("To be done");
       }
     }
   }
-  console.log(eoaHolders, "EOAholderArray");
-  console.log(contractHolders, "ContractholderArray");
+  // console.log(eoaHolders, "EOAholderArray");
+  // console.log(contractHolders, "ContractholderArray");
   // console.log(addressHolders['data']['result'], "addressHolders");
   if (eoaHolders.length == 0) {
     console.log("No EOA holders found");
@@ -96,7 +114,6 @@ module.exports = { addresses };
 // " https://api.gopluslabs.io/api/v1/token_security/1?contract_addresses=0x4fa38c2927d0155402cA22D993117e29065CE8eb"
 
 // https://api.gopluslabs.io/api/v1/token_security/56?contract_addresses=0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c
-
 
 /**
  * {
