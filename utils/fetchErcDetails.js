@@ -21,11 +21,11 @@ class TokenDetails {
     return units[unit];
   };
 
-  constructor(contract, tokenName, symbol, total_supply, decimals) {
+  constructor(contract, tokenName, decimals) {
     this.contract = contract;
     this.tokenName = tokenName;
-    this.symbol = symbol;
-    this.total_supply = total_supply;
+    // this.symbol = symbol;
+    // this.total_supply = total_supply;
     this.decimals = decimals;
   }
 
@@ -64,21 +64,21 @@ const fetchTokenDetails = async (web3, address) => {
 
   const tokenName = await erc20.methods.name().call();
 
-  const symbol = await erc20.methods.symbol().call();
+  // const symbol = await erc20.methods.symbol().call();
 
   const decimals = await erc20.methods.decimals().call();
 
-  const supply = await erc20.methods.totalSupply().call();
+  // const supply = await erc20.methods.totalSupply().call();
 
   console.log(
     tokenName,
-    symbol,
+    // symbol,
     decimals,
-    supply,
+    // supply,
     "--------------------------------"
   );
 
-  return new TokenDetails(erc20, tokenName, symbol, supply, decimals);
+  return new TokenDetails(erc20, tokenName, decimals);
 };
 
 module.exports = { fetchTokenDetails, TokenDetails };

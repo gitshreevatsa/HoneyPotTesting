@@ -28,6 +28,7 @@ const ganacheConnection = async (network, buy_account, sell_account) => {
   const ETHER_GOD = "0x0000000000000000000000000000000000000000";
   const dummy = '0xA93F74309D5631EbbC1E42FD411250A6b6240a69'
   console.log(buy_account, sell_account, "--------------------------------");
+  let web3Provider = new Web3(networkOptions[network]);
   // Choosing the network fork based on the network id
   let options = {};
   if (sell_account !== undefined) {
@@ -39,6 +40,7 @@ const ganacheConnection = async (network, buy_account, sell_account) => {
     options = {
       fork: networkOptions[network],
       wallet: { unlockedAccounts: [buy_account, ETHER_GOD, dummy] },
+      blockNumber : await web3Provider.eth.getBlockNumber()
     };
   }
   // Constructing the provider and web3 instance
@@ -53,7 +55,6 @@ const ganacheConnection = async (network, buy_account, sell_account) => {
       require("./abi/uniswap.json").abi,
       routerContract[network]
     );
-
   } catch (e) {
     console.log(e);
     console.log("Error in connecting to ganache network");

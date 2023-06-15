@@ -43,7 +43,7 @@ const quoteBaseCall = async (
         account,
         new BN("99999999999999").toNumber()
       )
-      .send({ from: account, gas: 300000 });
+      .send({ from: account, gas: 300000 , gasPrice : 20000000000});
     console.log(
       "success in calling swapExactTokensForTokensSupportingFeeOnTransferTokens"
     );

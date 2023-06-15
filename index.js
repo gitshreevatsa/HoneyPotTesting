@@ -69,6 +69,7 @@ app.get("/:id/:chain", async (req, res) => {
         pair: "",
       });
     } else {
+      
       console.log(baseAddressHolders.dexArray[0], "PAIR CONTRACT");
       const tokens = await getRouter(
         baseAddressHolders.dexArray[0],
@@ -126,6 +127,7 @@ app.get("/:id/:chain", async (req, res) => {
         console.log(
           "ganache connection ready ///////////////////////////////////////////////////"
         );
+        console.time("timer_start");
         await funding(
           ganacheConnect.web3,
           tokenHoldersArray.base_address_holder
@@ -135,6 +137,9 @@ app.get("/:id/:chain", async (req, res) => {
           tokenHoldersArray.quote_address_holder
         );
 
+        console.timeEnd("timer_start");
+
+        console.time("Token details");
         const token0 = await fetchTokenDetails(
           ganacheConnect.web3,
           tokens.tokens[0]
@@ -144,7 +149,7 @@ app.get("/:id/:chain", async (req, res) => {
           ganacheConnect.web3,
           tokens.tokens[1]
         );
-
+        console.timeEnd("Token details");
         // // rechecking the holders
 
         console.log(
@@ -158,7 +163,7 @@ app.get("/:id/:chain", async (req, res) => {
           tokens.tokens[1],
           "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"
         );
-
+        console.time("POPULATING ETHER");
         // // add error handling if else statement
         const sendEther = await populateEther(
           ganacheConnect.web3,
@@ -169,7 +174,7 @@ app.get("/:id/:chain", async (req, res) => {
           token0,
           token1
         );
-
+        console.timeEnd("POPULATING ETHER");
         if (
           sendEther.base_token_transfer_error != undefined ||
           sendEther.quote_token_transfer_error != undefined
@@ -187,6 +192,8 @@ app.get("/:id/:chain", async (req, res) => {
             pair: [req.params.id, token1.tokenName],
           });
         } else {
+
+          console.time('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!UNISWAP INTERACTION : ')
           const taxCalc = await tokenTax(
             ganacheConnect.web3,
             ganacheConnect.swapRouterContract,
@@ -202,6 +209,7 @@ app.get("/:id/:chain", async (req, res) => {
             token0,
             token1
           );
+          console.timeEnd('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!UNISWAP INTERACTION : ')
 
           console.log(taxCalc, "taxCalc");
 
@@ -220,9 +228,9 @@ app.get("/:id/:chain", async (req, res) => {
             sell_tax = taxCalc.sellTaxPercentage;
           }
 
-          if(taxCalc.approve_error != undefined){
+          if (taxCalc.approve_error != undefined) {
             isHoneyPot = 1;
-            error = "APPROVE FAILED"
+            error = "APPROVE FAILED";
           }
 
           if (
