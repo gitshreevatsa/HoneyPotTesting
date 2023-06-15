@@ -8,7 +8,7 @@ const ganache = require("ganache");
 const networkOptions = {
   56: "https://thrilling-green-dawn.bsc.discover.quiknode.pro/bfa1dcba97e594cf960398bee14d82229ccd57b9/",
   1: "https://multi-dimensional-glitter.discover.quiknode.pro/fa76eedb7480f2b9b29497d2b1c04a2414dbdd3b/",
-  137: "",
+  137: "https://fittest-dimensional-silence.matic.quiknode.pro/5941ed9461b6451cd2b294212d3090b7a098514a/",
 };
 
 const routerContract = {
