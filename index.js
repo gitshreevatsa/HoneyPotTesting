@@ -13,6 +13,7 @@ const { addresses } = require("./utils/addresses");
 const { tokenHolders } = require("./utils/tokenHolderChecker");
 const { getRouter } = require("./utils/uniswapV2");
 const { funding } = require("./utils/sendEther");
+const { reChecker } = require("./utils/balanceRechecker");
 
 const dexCollection = {
   1: "UniswapV2",
@@ -69,7 +70,6 @@ app.get("/:id/:chain", async (req, res) => {
         pair: "",
       });
     } else {
-      
       console.log(baseAddressHolders.dexArray[0], "PAIR CONTRACT");
       const tokens = await getRouter(
         baseAddressHolders.dexArray[0],
@@ -84,7 +84,7 @@ app.get("/:id/:chain", async (req, res) => {
         baseAddressHolders.eoaHolders
       );
 
-      console.log(baseAddressHolders, quoteAddressHolders);
+      // console.log(baseAddressHolders, quoteAddressHolders);
       if (baseAddressHolders == false || quoteAddressHolders == false) {
         res.json({
           error: ["No EOA holders found"],
@@ -101,170 +101,200 @@ app.get("/:id/:chain", async (req, res) => {
           "###################################################"
         );
 
-        const tokenHoldersArray = await tokenHolders(
+        const reCheckase = await reChecker(
           baseAddressHolders.eoaHolders,
-          quoteAddressHolders.eoaHolders
-        );
-
-        console.log(
-          tokenHoldersArray,
-          "tokenHoldersArray ++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-        );
-        // single ganache collection
-
-        if (
-          stableCoins.includes(req.params.id.toLocaleLowerCase()) &&
-          stableToken !== undefined
-        ) {
-          tokenHoldersArray.quote_address_holder = stableToken;
-        }
-
-        const ganacheConnect = await ganacheConnection(
           req.params.chain,
-          tokenHoldersArray.base_address_holder,
-          tokenHoldersArray.quote_address_holder
-        );
-        console.log(
-          "ganache connection ready ///////////////////////////////////////////////////"
-        );
-        console.time("timer_start");
-        await funding(
-          ganacheConnect.web3,
-          tokenHoldersArray.base_address_holder
-        );
-        await funding(
-          ganacheConnect.web3,
-          tokenHoldersArray.quote_address_holder
-        );
-
-        console.timeEnd("timer_start");
-
-        console.time("Token details");
-        const token0 = await fetchTokenDetails(
-          ganacheConnect.web3,
           tokens.tokens[0]
         );
-
-        const token1 = await fetchTokenDetails(
-          ganacheConnect.web3,
+        const reCheckQuote = await reChecker(
+          quoteAddressHolders.eoaHolders,
+          req.params.chain,
           tokens.tokens[1]
         );
-        console.timeEnd("Token details");
-        // // rechecking the holders
-
-        console.log(
-          tokenHoldersArray.base_address_holder,
-          tokens.tokens[0],
-          "###################################################"
-        );
-
-        console.log(
-          tokenHoldersArray.quote_address_holder,
-          tokens.tokens[1],
-          "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"
-        );
-        console.time("POPULATING ETHER");
-        // // add error handling if else statement
-        const sendEther = await populateEther(
-          ganacheConnect.web3,
-          tokenHoldersArray.base_address_holder,
-          tokenHoldersArray.quote_address_holder,
-          tokens.tokens[0],
-          tokens.tokens[1],
-          token0,
-          token1
-        );
-        console.timeEnd("POPULATING ETHER");
+          console.log(reCheckase, reCheckQuote, "reChecker");
         if (
-          sendEther.base_token_transfer_error != undefined ||
-          sendEther.quote_token_transfer_error != undefined
+          reCheckase == false ||
+          reCheckQuote == false ||
+          reCheckase.length == 0 ||
+          reCheckQuote.length == 0
         ) {
           res.json({
+            error: ["No EOA holders found"],
+            isHoneyPot: 1,
             buy_tax: undefined,
             sell_tax: undefined,
-            transfer_tax: undefined,
-            isHoneyPot: 1,
-            isHoneyPotReason: [
-              sendEther.base_token_transfer_error |
-                sendEther.quote_token_transfer_error,
-            ],
+            pair: tokens.tokens[1],
             dex: dexCollection[req.params.chain],
-            pair: [req.params.id, token1.tokenName],
           });
         } else {
 
-          console.time('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!UNISWAP INTERACTION : ')
-          const taxCalc = await tokenTax(
+          baseAddressHolders.eoaHolders = reCheckase;
+          quoteAddressHolders.eoaHolders = reCheckQuote;
+          const tokenHoldersArray = await tokenHolders(
+            baseAddressHolders.eoaHolders,
+            quoteAddressHolders.eoaHolders
+          );
+
+          console.log(
+            tokenHoldersArray,
+            "tokenHoldersArray ++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+          );
+
+          const ganacheConnect = await ganacheConnection(
+            req.params.chain,
+            tokenHoldersArray.base_address_holder,
+            tokenHoldersArray.quote_address_holder
+          );
+          console.log(
+            "ganache connection ready ///////////////////////////////////////////////////"
+          );
+          console.time("timer_start");
+          await funding(
             ganacheConnect.web3,
-            ganacheConnect.swapRouterContract,
+            tokenHoldersArray.base_address_holder
+          );
+          await funding(
+            ganacheConnect.web3,
+            tokenHoldersArray.quote_address_holder
+          );
+
+          console.timeEnd("timer_start");
+
+          console.time("Token details");
+          const token0 = await fetchTokenDetails(
+            ganacheConnect.web3,
+            tokens.tokens[0]
+          );
+
+          const token1 = await fetchTokenDetails(
+            ganacheConnect.web3,
+            tokens.tokens[1]
+          );
+          console.timeEnd("Token details");
+          // // rechecking the holders
+
+          console.log(
+            tokenHoldersArray.base_address_holder,
             tokens.tokens[0],
+            "###################################################"
+          );
+
+          console.log(
+            tokenHoldersArray.quote_address_holder,
             tokens.tokens[1],
+            "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"
+          );
+
+          console.time("POPULATING ETHER");
+          // // add error handling if else statement
+          const sendEther = await populateEther(
+            ganacheConnect.web3,
             tokenHoldersArray.base_address_holder,
             tokenHoldersArray.quote_address_holder,
-            1,
-            true,
-            300000,
-            1000000000,
-            tokenHoldersArray,
+            tokens.tokens[0],
+            tokens.tokens[1],
             token0,
             token1
           );
-          console.timeEnd('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!UNISWAP INTERACTION : ')
-
-          console.log(taxCalc, "taxCalc");
-
+          console.timeEnd("POPULATING ETHER");
           if (
-            taxCalc.buyTaxPercentage == undefined ||
-            taxCalc.sellTaxPercentage == undefined ||
-            // taxCalc.approve_error == undefined ||
-            taxCalc.sellTaxPercentage > 60 ||
-            taxCalc.buyTaxPercentage > 60
+            sendEther.base_token_transfer_error != undefined ||
+            sendEther.quote_token_transfer_error != undefined
           ) {
-            isHoneyPot = 1;
-            error = "HIGH TAX";
+            res.json({
+              buy_tax: undefined,
+              sell_tax: undefined,
+              transfer_tax: undefined,
+              isHoneyPot: 1,
+              isHoneyPotReason: [
+                sendEther.base_token_transfer_error |
+                  sendEther.quote_token_transfer_error,
+              ],
+              dex: dexCollection[req.params.chain],
+              pair: [req.params.id, token1.tokenName],
+            });
           } else {
-            isHoneyPot = 0;
-            buy_tax = taxCalc.buyTaxPercentage;
-            sell_tax = taxCalc.sellTaxPercentage;
-          }
+            console.time(
+              "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!UNISWAP INTERACTION : "
+            );
+            const taxCalc = await tokenTax(
+              ganacheConnect.web3,
+              ganacheConnect.swapRouterContract,
+              tokens.tokens[0],
+              tokens.tokens[1],
+              tokenHoldersArray.base_address_holder,
+              tokenHoldersArray.quote_address_holder,
+              1,
+              true,
+              300000,
+              1000000000,
+              tokenHoldersArray,
+              token0,
+              token1
+            );
+            console.timeEnd(
+              "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!UNISWAP INTERACTION : "
+            );
 
-          if (taxCalc.approve_error != undefined) {
-            isHoneyPot = 1;
-            error = "APPROVE FAILED";
-          }
+            console.log(taxCalc, "taxCalc");
 
-          if (
-            taxCalc.buy_tax_error !== undefined ||
-            taxCalc.sell_tax_error !== undefined ||
-            taxCalc.approve_error !== undefined
-          ) {
-            error = "Transfer Failed";
-            isHoneyPot = 1;
-          }
+            if (
+              taxCalc.buyTaxPercentage == undefined ||
+              taxCalc.sellTaxPercentage == undefined ||
+              // taxCalc.approve_error == undefined ||
+              taxCalc.sellTaxPercentage > 60 ||
+              taxCalc.buyTaxPercentage > 60
+            ) {
+              isHoneyPot = 1;
+              error = "HIGH TAX";
+            } else {
+              isHoneyPot = 0;
+              buy_tax = taxCalc.buyTaxPercentage;
+              sell_tax = taxCalc.sellTaxPercentage;
+            }
 
-          if (taxCalc.buyTax > 60) {
-            buy_tax_error = "High Buy Tax";
-            error = "High Buy Tax";
-          }
+            if (taxCalc.approve_error != undefined) {
+              isHoneyPot = 1;
+              error = "APPROVE FAILED";
+            }
 
-          if (taxCalc.sell_tax > 60) {
-            sell_tax_error = "High Sell Tax";
-            error = "High Sell Tax";
-          }
+            if (
+              taxCalc.buy_tax_error !== undefined ||
+              taxCalc.sell_tax_error !== undefined ||
+              taxCalc.approve_error !== undefined
+            ) {
+              error = "Transfer Failed";
+              isHoneyPot = 1;
+              buy_tax = taxCalc.buyTaxPercentage;
+              sell_tax = taxCalc.sellTaxPercentage;
+            }
 
-          res.status(200).json({
-            buy_tax: sell_tax | undefined,
-            sell_tax: buy_tax | undefined,
-            transfer_tax: ((buy_tax + sell_tax) / 2) | undefined,
-            isHoneyPot: isHoneyPot,
-            isHoneyPotReason: [error],
-            dex: dexCollection[req.params.chain],
-            pair: [token0.tokenName, token1.tokenName],
-          });
-          if (stableCoins.includes(req.params.id.toLocaleLowerCase())) {
-            console.log(cache.get(req.params.id));
-          } else {
-            cache.set(req.params.id, tokenHoldersArray.quote_address_holder);
+            if (taxCalc.buyTax > 60) {
+              buy_tax_error = "High Buy Tax";
+              error = "High Buy Tax";
+              buy_tax = taxCalc.buyTaxPercentage;
+              sell_tax = taxCalc.sellTaxPercentage;
+            }
+
+            if (taxCalc.sell_tax > 60) {
+              sell_tax_error = "High Sell Tax";
+              error = "High Sell Tax";
+            }
+
+            res.status(200).json({
+              buy_tax: sell_tax | undefined,
+              sell_tax: buy_tax | undefined,
+              transfer_tax: ((buy_tax + sell_tax) / 2) | undefined,
+              isHoneyPot: isHoneyPot,
+              isHoneyPotReason: [error],
+              dex: dexCollection[req.params.chain],
+              pair: [token0.tokenName, token1.tokenName],
+            });
+            if (stableCoins.includes(req.params.id.toLocaleLowerCase())) {
+              console.log(cache.get(req.params.id));
+            } else {
+              cache.set(req.params.id, tokenHoldersArray.quote_address_holder);
+            }
           }
         }
       }

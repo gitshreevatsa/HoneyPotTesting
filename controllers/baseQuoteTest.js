@@ -1,6 +1,6 @@
 const BN = require("bn.js");
 const { getRevertReason } = require("../utils/errorReason");
-const {ethers} = require("ethers");
+const { ethers } = require("ethers");
 const { default: Web3 } = require("web3");
 
 let functionJson = {
@@ -38,25 +38,6 @@ const baseQuoteCall = async (amountIn, path, routerContract, account, web3) => {
     );
     functionError.swapExactTokensForTokensSupportingFeeOnTransferTokens =
       err.message;
-    // console.log(err.receipt);
-
-    // const txhash = err.receipt.transactionHash;
-
-    // const tx = await web3.eth.getTransaction(txhash);
-    // console.log(tx);
-
-
-    // let result = await web3.eth.call(tx, tx.blockNumber)
-    // console.log("result", result);
-    // result = result.startsWith("0x") ? result : `0x${result}`;
-    // if (result && result.substr(138)) {
-    //   const reason = web3.utils.toAscii(result.substr(138));
-    //   console.log("Revert reason:", reason);
-    //   functionError.swapExactTokensForTokensSupportingFeeOnTransferTokens = reason;
-    // } else {
-    //   console.log("Cannot get reason - No return value");
-    // }
-
 
     try {
       await routerContract.methods

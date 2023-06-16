@@ -134,44 +134,41 @@ const tokenTax = async (
   let uniswap_price = await routerContract.methods
     .getAmountsOut(amountIn, path)
     .call();
-
-  const baseQuote = await baseQuoteCall(
-    amountIn,
-    path,
-    router,
-    buy_account,
-    web3
-  );
+  let baseQuote;
+  try {
+    baseQuote = await baseQuoteCall(amountIn, path, router, buy_account, web3);
+  } catch (e) {
+    console.log(e);
+  }
 
   console.log(baseQuote, "base quote");
 
   if (baseQuote.error !== "") {
     buy_tax_error = baseQuote.error;
     console.log("STOPPING HERE");
-  } else {
-    const receivedAmount = await quote_token.methods
-      .balanceOf(buy_account)
-      .call();
-
-    console.log("Received amount", receivedAmount);
-
-    if (uniswap_price[0] == amountIn) {
-      console.error("Correct input amount", amountIn, uniswap_price[0]);
-    }
-
-    buyTax = (uniswap_price[1] - receivedAmount) / uniswap_price[1];
-
-    console.log(uniswap_price);
-
-    console.log(
-      receivedAmount,
-      " - Recieved amount",
-      uniswap_price[1],
-      " - Uniswap price"
-    );
-
-    console.log("Buy Tax Percentage", buyTax * 100, "%");
   }
+  const receivedAmount = await quote_token.methods
+    .balanceOf(buy_account)
+    .call();
+
+  console.log("Received amount", receivedAmount);
+
+  if (uniswap_price[0] == amountIn) {
+    console.error("Correct input amount", amountIn, uniswap_price[0]);
+  }
+
+  buyTax = (uniswap_price[1] - receivedAmount) / uniswap_price[1];
+
+  console.log(uniswap_price);
+
+  console.log(
+    receivedAmount,
+    " - Recieved amount",
+    uniswap_price[1],
+    " - Uniswap price"
+  );
+
+  console.log("Buy Tax Percentage", buyTax * 100, "%");
 
   /**
    * Sell Tax
@@ -195,8 +192,9 @@ const tokenTax = async (
     await web3.eth.getBalance(sell_account),
     newpath
   );
-
-  const quoteBase = await quoteBaseCall(
+let quoteBase;
+try{
+   quoteBase = await quoteBaseCall(
     recieved_amount_by_seller,
     newpath,
     router,
@@ -204,6 +202,9 @@ const tokenTax = async (
     quote_token_details,
     web3
   );
+   } catch(e){
+    console.log(e);
+   }
 
   if (quoteBase.nativeERC.erc === true) {
     uniswap_price = uniswap_price_erc;

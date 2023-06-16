@@ -31,18 +31,19 @@ const addresses = async (base_address, chain_id, copyAddress) => {
   let eoaHolders = new Array();
   const contractHolders = new Array();
   const dexArray = new Array();
+  let dex;
 
   const addressHolders = await axios.get(
     ` https://api.gopluslabs.io/api/v1/token_security/${chain_id}?contract_addresses=${base_address} `
   );
 
   // first taking the dex
-  if (addressHolders["data"]["result"] === {}) {
+  if (addressHolders["data"]["result"] == {}) {
     return false, "Not a Token";
   } else {
-    console.log(addressHolders["data"]["result"][base_address.toLowerCase()]);
-    const dex =
-      addressHolders["data"]["result"][base_address.toLowerCase()]["dex"];
+    // console.log(addressHolders["data"]["result"][base_address.toLowerCase()]);
+    if (addressHolders["data"]["result"][base_address.toLowerCase()]["dex"])
+      dex = addressHolders["data"]["result"][base_address.toLowerCase()]["dex"];
     if (dex == undefined) return false;
     // console.log(dex, "dex");
     await dex.forEach((element) => {
@@ -72,12 +73,13 @@ const addresses = async (base_address, chain_id, copyAddress) => {
     console.log(ownerHolder, "OWNER");
     // console.log(holderArray, "holderArray");
 
-    if (holderArray == undefined && ownerBalane === "0") {
+    if (holderArray === undefined && ownerBalane === "0") {
       eoaHolders.push("0x0000000000000000000000000000000000000000");
       console.log("holders are pushed here");
     } else if (holderArray) {
+      console.log("ADDRESSES HOLDING");
       await holderArray.forEach((element) => {
-        if (element["is_contract"] === 0 && element["balance"] > 0) {
+        if (element["is_contract"] === 0 && element["balance"] > "0") {
           eoaHolders.push(element["address"]);
         } else {
           contractHolders.push(element["address"]);
@@ -96,15 +98,17 @@ const addresses = async (base_address, chain_id, copyAddress) => {
         console.log(
           "CONTROL TRANSFERRED !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
         );
+        eoaHolders = [];
         await lpArray.forEach((element) => {
-          if (element["is_contract"] === 0 && element["balance"] > 0) {
-            eoaHolders = [];
+          if (element["is_contract"] == 0) {
+
             eoaHolders.push(element["address"]);
           } else {
             contractHolders.push(element["address"]);
           }
         });
         console.log("LP HOLDER PUSHED");
+        console.log(eoaHolders[2], "EOA HOLDER", base_address);
       }
     } else if (eoaHolders.length == 0 && ownerBalane !== "0") {
       eoaHolders.push(ownerHolder);
