@@ -124,7 +124,7 @@ const tokenTax = async (
 
   let path = [base_token._address, quote_token._address];
 
-  const amountIn = await base_token.methods.balanceOf(buy_account).call();
+  let amountIn = await base_token.methods.balanceOf(buy_account).call();
   console.log("amount in", amountIn);
 
   console.warn(await quote_token.methods.balanceOf(buy_account).call());
@@ -192,6 +192,7 @@ const tokenTax = async (
     await web3.eth.getBalance(sell_account),
     newpath
   );
+
 let quoteBase;
 try{
    quoteBase = await quoteBaseCall(
@@ -202,6 +203,7 @@ try{
     quote_token_details,
     web3
   );
+
    } catch(e){
     console.log(e);
    }
@@ -236,8 +238,6 @@ try{
     sellTaxPercentage = sell_tax * 100;
     console.log("sell tax percentage", sellTaxPercentage);
 
-    if (buyTax <= 0) buyTax = 0;
-    if (sell_tax <= 0) sell_tax = 0;
     buyTaxPercentage = buyTax * 100;
     sellTaxPercentage = sell_tax * 100;
     console.log("buy tax %", buyTax * 100);

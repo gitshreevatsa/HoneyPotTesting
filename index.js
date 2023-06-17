@@ -39,17 +39,24 @@ app.get("/:id/:chain", async (req, res) => {
       error: ["Unsupported Chain ID"],
     });
   } else {
-    let isHoneyPot, buy_tax, sell_tax, error, stableToken;
+    let isHoneyPot,
+      buy_tax = 0.00,
+      sell_tax = 0.00,
+      error,
+      stableToken;
     // try to get chain
 
     // Fetching the base and quote token holders
-    if (stableCoins.includes(req.params.id.toLocaleLowerCase())) {
-      stableToken = cache.get(req.params.id);
-      console.log(
-        stableToken,
-        "*********************************************************************************"
-      );
-    }
+    // if (stableCoins.includes(req.params.id.toLocaleLowerCase())) {
+    //   stableToken = cache.get("cachedData");
+    //   if ((stableToken["chainId"] = req.params.chain)) {
+    //     stableToken = stableToken["address"];
+    //   }
+    //   console.log(
+    //     stableToken,
+    //     "*********************************************************************************"
+    //   );
+    // }
 
     const baseAddressHolders = await addresses(
       req.params.id,
@@ -77,6 +84,8 @@ app.get("/:id/:chain", async (req, res) => {
       );
 
       // Uniswap V2 Pair caller function , then proceed with quoteTokenHolders addresses
+
+      // let quoteAddressHolders;
 
       const quoteAddressHolders = await addresses(
         tokens.tokens[1],
@@ -111,7 +120,7 @@ app.get("/:id/:chain", async (req, res) => {
           req.params.chain,
           tokens.tokens[1]
         );
-          console.log(reCheckase, reCheckQuote, "reChecker");
+        console.log(reCheckase, reCheckQuote, "reChecker");
         if (
           reCheckase == false ||
           reCheckQuote == false ||
@@ -127,7 +136,6 @@ app.get("/:id/:chain", async (req, res) => {
             dex: dexCollection[req.params.chain],
           });
         } else {
-
           baseAddressHolders.eoaHolders = reCheckase;
           quoteAddressHolders.eoaHolders = reCheckQuote;
           const tokenHoldersArray = await tokenHolders(
@@ -146,7 +154,8 @@ app.get("/:id/:chain", async (req, res) => {
             tokenHoldersArray.quote_address_holder
           );
           console.log(
-            "ganache connection ready ///////////////////////////////////////////////////"
+            "ganache connection ready ///////////////////////////////////////////////////",
+            await ganacheConnect.web3.eth.getBlockNumber()
           );
           console.time("timer_start");
           await funding(
@@ -249,8 +258,6 @@ app.get("/:id/:chain", async (req, res) => {
               error = "HIGH TAX";
             } else {
               isHoneyPot = 0;
-              buy_tax = taxCalc.buyTaxPercentage;
-              sell_tax = taxCalc.sellTaxPercentage;
             }
 
             if (taxCalc.approve_error != undefined) {
@@ -270,6 +277,7 @@ app.get("/:id/:chain", async (req, res) => {
             }
 
             if (taxCalc.buyTax > 60) {
+              isHoneyPot = 1;
               buy_tax_error = "High Buy Tax";
               error = "High Buy Tax";
               buy_tax = taxCalc.buyTaxPercentage;
@@ -277,8 +285,14 @@ app.get("/:id/:chain", async (req, res) => {
             }
 
             if (taxCalc.sell_tax > 60) {
+              isHoneyPot = 1;
               sell_tax_error = "High Sell Tax";
               error = "High Sell Tax";
+            }
+
+            if(taxCalc.buyTaxPercentage != undefined && taxCalc.sellTaxPercentage != undefined){
+              buy_tax = Math.round(taxCalc.buyTaxPercentage);
+              sell_tax = Math.round(taxCalc.sellTaxPercentage);
             }
 
             res.status(200).json({
@@ -290,11 +304,6 @@ app.get("/:id/:chain", async (req, res) => {
               dex: dexCollection[req.params.chain],
               pair: [token0.tokenName, token1.tokenName],
             });
-            if (stableCoins.includes(req.params.id.toLocaleLowerCase())) {
-              console.log(cache.get(req.params.id));
-            } else {
-              cache.set(req.params.id, tokenHoldersArray.quote_address_holder);
-            }
           }
         }
       }
