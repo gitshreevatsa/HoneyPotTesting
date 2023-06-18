@@ -272,16 +272,14 @@ app.get("/:id/:chain", async (req, res) => {
             ) {
               error = "Transfer Failed";
               isHoneyPot = 1;
-              buy_tax = taxCalc.buyTaxPercentage;
-              sell_tax = taxCalc.sellTaxPercentage;
+              
             }
 
             if (taxCalc.buyTax > 60) {
               isHoneyPot = 1;
               buy_tax_error = "High Buy Tax";
               error = "High Buy Tax";
-              buy_tax = taxCalc.buyTaxPercentage;
-              sell_tax = taxCalc.sellTaxPercentage;
+
             }
 
             if (taxCalc.sell_tax > 60) {
