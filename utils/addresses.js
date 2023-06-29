@@ -42,7 +42,7 @@ const addresses = async (base_address, chain_id, copyAddress) => {
     return false, "Not a Token";
   } else {
     // console.log(addressHolders["data"]["result"][base_address.toLowerCase()]);
-    if (addressHolders["data"]["result"][base_address.toLowerCase()]["dex"])
+    if (addressHolders["data"]["result"][base_address.toLowerCase()]["is_in_dex"])
       dex = addressHolders["data"]["result"][base_address.toLowerCase()]["dex"];
     if (dex == undefined) return false;
     // console.log(dex, "dex");

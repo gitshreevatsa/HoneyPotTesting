@@ -127,7 +127,7 @@ const tokenTax = async (
   let amountIn = await base_token.methods.balanceOf(buy_account).call();
   console.log("amount in", amountIn);
 
-  console.warn(await quote_token.methods.balanceOf(buy_account).call());
+  // console.warn(await quote_token.methods.balanceOf(buy_account).call());
   /**
    * Buy Tax
    */
@@ -188,29 +188,29 @@ const tokenTax = async (
     .getAmountsOut(recieved_amount_by_seller, newpath)
     .call();
 
-  let uniswap_price_native = await router.methods.getAmountsOut(
-    await web3.eth.getBalance(sell_account),
-    newpath
-  );
+  let uniswap_price_native = await router.methods
+    .getAmountsOut("0x" + new BN("10000000000000000", 10).toString(16), newpath)
+    .call();
 
-let quoteBase;
-try{
-   quoteBase = await quoteBaseCall(
-    recieved_amount_by_seller,
-    newpath,
-    router,
-    sell_account,
-    quote_token_details,
-    web3
-  );
-
-   } catch(e){
+  let quoteBase;
+  try {
+    quoteBase = await quoteBaseCall(
+      recieved_amount_by_seller,
+      newpath,
+      router,
+      sell_account,
+      quote_token_details,
+      web3
+    );
+  } catch (e) {
     console.log(e);
-   }
+  }
 
   if (quoteBase.nativeERC.erc === true) {
+    console.log("erc");
     uniswap_price = uniswap_price_erc;
   } else if (quoteBase.nativeERC.native === true) {
+    console.log("native");
     uniswap_price = uniswap_price_native;
   }
 

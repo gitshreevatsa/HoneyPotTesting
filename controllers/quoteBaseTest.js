@@ -43,7 +43,7 @@ const quoteBaseCall = async (
         account,
         new BN("99999999999999").toNumber()
       )
-      .send({ from: account, gas: 300000 , gasPrice : 20000000000});
+      .send({ from: account, gas: 3000000 });
     console.log(
       "success in calling swapExactTokensForTokensSupportingFeeOnTransferTokens"
     );
@@ -56,27 +56,6 @@ const quoteBaseCall = async (
     console.log(err.message);
     functionError.swapExactTokensForTokensSupportingFeeOnTransferTokens =
       err.message;
-    // const txhash = err.receipt.transactionHash;
-    // const tx = await ethers.web3.getTransaction(txhash);
-    // console.log(tx);
-    // const response = await ethers.web3.call(
-    //   {
-    //     to: tx.to,
-    //     from: tx.from,
-    //     nonce: tx.nonce,
-    //     gasLimit: tx.gasLimit,
-    //     gasPrice: tx.gasPrice,
-    //     data: tx.data,
-    //     value: tx.value,
-    //     chainId: tx.chainId,
-    //     type: tx.type ?? undefined,
-    //     accessList: tx.accessList,
-    //   },
-    //   tx.blockNumber
-    // );
-
-    // let reason = ethers.utils.toUtf8String("0x" + response.substring(138));
-    // console.log(reason);
 
     try {
       await routerContract.methods
@@ -109,7 +88,7 @@ const quoteBaseCall = async (
             from: account,
             gas: 3000000,
             value:
-              (await web3.eth.getBalance(account)) - new BN("1").toNumber(),
+            "0x" + new BN("10000000000000000", 10).toString(16)
           });
         console.log(
           "success in calling swapExactETHForTokensSupportingFeeOnTransferTokens"
@@ -135,7 +114,7 @@ const quoteBaseCall = async (
               from: account,
               gas: 3000000,
               value:
-                (await web3.eth.getBalance(account)) - new BN("1").toNumber(),
+              "0x" + new BN("10000000000000000", 10).toString(16)
             });
           console.log("success in calling swapETHForExactTokens");
           functionJson.swapETHForExactTokens = true;

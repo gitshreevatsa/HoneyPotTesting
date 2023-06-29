@@ -27,12 +27,13 @@ const baseQuoteCall = async (amountIn, path, routerContract, account, web3) => {
         account,
         new BN("99999999999999").toNumber()
       )
-      .send({ from: account, gas: 3000000 });
+      .send({ from: account, gas: 30000000 });
     functionJson.swapExactTokensForTokensSupportingFeeOnTransferTokens = true;
     console.log(
       "success in calling swapExactTokensForTokensSupportingFeeOnTransferTokens"
     );
   } catch (err) {
+    console.log(err);
     console.log(
       "error in calling swapExactTokensForTokensSupportingFeeOnTransferTokens"
     );

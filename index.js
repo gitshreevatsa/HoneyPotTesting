@@ -40,23 +40,11 @@ app.get("/:id/:chain", async (req, res) => {
     });
   } else {
     let isHoneyPot,
-      buy_tax = 0.00,
-      sell_tax = 0.00,
+      buy_tax = 0.0,
+      sell_tax = 0.0,
       error,
       stableToken;
     // try to get chain
-
-    // Fetching the base and quote token holders
-    // if (stableCoins.includes(req.params.id.toLocaleLowerCase())) {
-    //   stableToken = cache.get("cachedData");
-    //   if ((stableToken["chainId"] = req.params.chain)) {
-    //     stableToken = stableToken["address"];
-    //   }
-    //   console.log(
-    //     stableToken,
-    //     "*********************************************************************************"
-    //   );
-    // }
 
     const baseAddressHolders = await addresses(
       req.params.id,
@@ -83,15 +71,22 @@ app.get("/:id/:chain", async (req, res) => {
         req.params.chain
       );
 
+      console.log(tokens, "tokens");
+
       // Uniswap V2 Pair caller function , then proceed with quoteTokenHolders addresses
 
       // let quoteAddressHolders;
+      if(tokens.tokens[1] == req.params.id){
+        tokens.tokens = [tokens.tokens[1], tokens.tokens[0]]
+      }
 
       const quoteAddressHolders = await addresses(
         tokens.tokens[1],
         req.params.chain,
         baseAddressHolders.eoaHolders
       );
+
+      console.log(quoteAddressHolders, "quoteAddressHolders");
 
       // console.log(baseAddressHolders, quoteAddressHolders);
       if (baseAddressHolders == false || quoteAddressHolders == false) {
@@ -105,7 +100,7 @@ app.get("/:id/:chain", async (req, res) => {
         });
       } else {
         console.log(
-          await tokens.tokens[0],
+          tokens.tokens[0],
           tokens.tokens[1],
           "###################################################"
         );
@@ -115,12 +110,14 @@ app.get("/:id/:chain", async (req, res) => {
           req.params.chain,
           tokens.tokens[0]
         );
+        console.log("Checked recheckbase");
         const reCheckQuote = await reChecker(
           quoteAddressHolders.eoaHolders,
           req.params.chain,
           tokens.tokens[1]
         );
-        console.log(reCheckase, reCheckQuote, "reChecker");
+        console.log("Checked recheckquote");
+
         if (
           reCheckase == false ||
           reCheckQuote == false ||
@@ -147,7 +144,7 @@ app.get("/:id/:chain", async (req, res) => {
             tokenHoldersArray,
             "tokenHoldersArray ++++++++++++++++++++++++++++++++++++++++++++++++++++++"
           );
-
+            // tokenHoldersArray.quote_address_holder = '0xb452f7f5297f951b3b890159e288607145bc0759'
           const ganacheConnect = await ganacheConnection(
             req.params.chain,
             tokenHoldersArray.base_address_holder,
@@ -272,14 +269,12 @@ app.get("/:id/:chain", async (req, res) => {
             ) {
               error = "Transfer Failed";
               isHoneyPot = 1;
-              
             }
 
             if (taxCalc.buyTax > 60) {
               isHoneyPot = 1;
               buy_tax_error = "High Buy Tax";
               error = "High Buy Tax";
-
             }
 
             if (taxCalc.sell_tax > 60) {
@@ -288,7 +283,10 @@ app.get("/:id/:chain", async (req, res) => {
               error = "High Sell Tax";
             }
 
-            if(taxCalc.buyTaxPercentage != undefined && taxCalc.sellTaxPercentage != undefined){
+            if (
+              taxCalc.buyTaxPercentage != undefined &&
+              taxCalc.sellTaxPercentage != undefined
+            ) {
               buy_tax = Math.round(taxCalc.buyTaxPercentage);
               sell_tax = Math.round(taxCalc.sellTaxPercentage);
             }
