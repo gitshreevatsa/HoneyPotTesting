@@ -54,12 +54,13 @@ app.get("/:id/:chain", async (req, res) => {
     console.log(baseAddressHolders, "baseAddressHolders");
 
     if (
-      baseAddressHolders === false ||
+      baseAddressHolders == false ||
+      baseAddressHolders.dexArray == undefined ||
       baseAddressHolders.dexArray.length == 0
     ) {
       res.json({
         error: ["No dex found"],
-        isHoneyPot: 1,
+        isHoneyPot: -1,
         buy_tax: "",
         sell_tax: "",
         pair: "",
