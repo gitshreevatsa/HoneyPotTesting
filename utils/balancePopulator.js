@@ -56,7 +56,7 @@ const populateEther = async (
     try {
       await quote_token_details.contract.methods
         .transfer(
-          "0x0000000000000000000000000000000000000000",
+          "0xA93F74309D5631EbbC1E42FD411250A6b6240a69",
           buy_account_balance
         )
         .send({ from: buy_account });
@@ -72,7 +72,7 @@ const populateEther = async (
     try {
       await base_token_details.contract.methods
         .transfer(
-          "0x0000000000000000000000000000000000000000",
+          "0xA93F74309D5631EbbC1E42FD411250A6b6240a69",
           sell_account_balance
         )
         .send({ from: sell_account });

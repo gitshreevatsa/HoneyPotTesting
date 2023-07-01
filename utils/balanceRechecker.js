@@ -24,7 +24,7 @@ const reChecker = async (addressArray, network, tokenAddress) => {
     if (balance > 0) balanceArray.push(addressArray[i]);
   }
   if (balanceArray.length > 0) return balanceArray;
-  return false;
+  else return false;
 };
 
 module.exports = { reChecker };

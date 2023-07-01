@@ -36,9 +36,9 @@ const addresses = async (base_address, chain_id, copyAddress) => {
   const addressHolders = await axios.get(
     ` https://api.gopluslabs.io/api/v1/token_security/${chain_id}?contract_addresses=${base_address} `
   );
-
+    console.log(addressHolders["data"]["result"], "addressHolders");
   // first taking the dex
-  if (addressHolders["data"]["result"] == {}) {
+  if (Object.keys(addressHolders["data"]["result"]).length == 0) {
     return false, "Not a Token";
   } else {
     // console.log(addressHolders["data"]["result"][base_address.toLowerCase()]);
