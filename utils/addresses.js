@@ -4,7 +4,7 @@ const web3 = require("web3");
 const { bsc, eth, polygon } = require("./providers");
 const { fetchTokenDetails } = require("./fetchErcDetails");
 const { arrayChecker } = require("./arrayChecker");
-const sdk = require("api")("@chainbase/v1.0#es1jjlg6g4o2b");
+const { apiCall } = require("./apiCall");
 
 const providers = {
   1: eth,
@@ -15,7 +15,13 @@ const providers = {
 const dexproviders = {
   1: "UniswapV2",
   56: "PancakeV2",
-  137: "Quickswap",
+  137: "QuickSwap",
+};
+
+const Ankr_Chain_Mapping = {
+  1: "eth",
+  56: "bsc",
+  137: "polygon",
 };
 // /**
 //  *
@@ -33,45 +39,71 @@ const addresses = async (base_address, chain_id, copyAddress) => {
   const dexArray = new Array();
   let dex;
 
-  const addressHolders = await axios.get(
+  const url = `https://rpc.ankr.com/multichain/79258ce7f7ee046decc3b5292a24eb4bf7c910d7e39b691384c7ce0cfb839a01/?ankr_getTokenHolders=`;
+
+  const body = {
+    jsonrpc: "2.0",
+    method: "ankr_getTokenHolders",
+    params: {
+      blockchain: Ankr_Chain_Mapping[chain_id],
+      contractAddress: base_address,
+    },
+    id: 1,
+  };
+
+  let tokenHolderInformation = await apiCall(url, "POST", body);
+
+  console.log(tokenHolderInformation, "tokenHolderInformation");
+
+  let addressHolders = tokenHolderInformation.result.holders;
+
+  const getDex = await axios.get(
     ` https://api.gopluslabs.io/api/v1/token_security/${chain_id}?contract_addresses=${base_address} `
   );
-    console.log(addressHolders["data"]["result"], "addressHolders");
+  // console.log(addressHolders["data"]["result"], "addressHolders");
   // first taking the dex
-  if (Object.keys(addressHolders["data"]["result"]).length == 0) {
-    return false, "Not a Token";
+  if (false) {
+    console.log("No data found");
+    return false;
   } else {
     // console.log(addressHolders["data"]["result"][base_address.toLowerCase()]);
-    if (addressHolders["data"]["result"][base_address.toLowerCase()]["is_in_dex"])
-      dex = addressHolders["data"]["result"][base_address.toLowerCase()]["dex"];
-    if (dex == undefined) return false;
+    if (
+      getDex["data"]["result"][base_address.toLowerCase()]["is_in_dex"] === "1"
+    )
+      console.log("Entered here");
+    dex = getDex["data"]["result"][base_address.toLowerCase()]["dex"];
+    console.log(dex, "dex");
+    if (dex === undefined) return false;
     // console.log(dex, "dex");
+    console.log(dexproviders[chain_id], "dexproviders");
     await dex.forEach((element) => {
-      if (element["name"] == dexproviders[chain_id]) {
+      if (element["name"] === dexproviders[chain_id]) {
+        console.log(element["name"], "DEX IT IS IN");
         dexArray.push(element["pair"]);
       }
     });
+    console.log(dexArray, "dexArray");
     // change
     // console.log(dexArray);
 
     // second :  taking the holder array and lp array
-    const holderArray =
-      addressHolders["data"]["result"][base_address.toLowerCase()]["holders"];
-    const lpArray =
-      addressHolders["data"]["result"][base_address.toLowerCase()][
-        "lp_holders"
-      ];
-    const ownerHolder =
-      addressHolders["data"]["result"][base_address.toLowerCase()][
-        "creator_address"
-      ];
-    const ownerBalane =
-      addressHolders["data"]["result"][base_address.toLowerCase()][
-        "creator_balance"
-      ];
-    console.log(ownerBalane, "OWNER BALANCE");
-    console.log(ownerHolder, "OWNER");
-    // console.log(holderArray, "holderArray");
+    const holderArray = addressHolders;
+    // const lpArray =
+    //   addressHolders["data"]["result"][base_address.toLowerCase()][
+    //     "lp_holders"
+    //   ];
+    // const ownerHolder =
+    //   addressHolders["data"]["result"][base_address.toLowerCase()][
+    //     "creator_address"
+    //   ];
+    // const ownerBalane =
+    //   addressHolders["data"]["result"][base_address.toLowerCase()][
+    //     "creator_balance"
+    //   ];
+    // console.log(lpArray, "lparray");
+    // console.log(ownerBalane, "OWNER BALANCE");
+    // console.log(ownerHolder, "OWNER");
+    // // console.log(holderArray, "holderArray");
 
     if (holderArray === undefined && ownerBalane === "0") {
       eoaHolders.push("0x0000000000000000000000000000000000000000");
@@ -79,53 +111,61 @@ const addresses = async (base_address, chain_id, copyAddress) => {
     } else if (holderArray) {
       console.log("ADDRESSES HOLDING");
       await holderArray.forEach((element) => {
-        if (element["is_contract"] === 0 && element["balance"] > "0") {
-          eoaHolders.push(element["address"]);
+        if (element["balance"] > "0.001" && eoaHolders.length < 20) {
+          eoaHolders.push(element["holderAddress"]);
         } else {
-          contractHolders.push(element["address"]);
+          contractHolders.push(element["holderAddress"]);
         }
       });
 
       if (copyAddress === undefined) {
         copyAddress = [];
       }
-      if (
-        // a function to comapre arrays and return true or false
-        arrayChecker(eoaHolders, copyAddress) ||
-        eoaHolders.length == 0
-      ) {
-        // get Lp holders and make a list of them
-        console.log(
-          "CONTROL TRANSFERRED !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-        );
-        eoaHolders = [];
-        await lpArray.forEach((element) => {
-          if (element["is_contract"] == 0) {
 
-            eoaHolders.push(element["address"]);
-          } else {
-            contractHolders.push(element["address"]);
-          }
-        });
-        console.log("LP HOLDER PUSHED");
-        console.log(eoaHolders[2], "EOA HOLDER", base_address);
-      }
-    } else if (eoaHolders.length == 0 && ownerBalane !== "0") {
-      eoaHolders.push(ownerHolder);
+      // if (lpArray) {
+      //   if (eoaHolders.length === 0) {
+      //     // get Lp holders and make a list of them
+      //     console.log(
+      //       "CONTROL TRANSFERRED !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+      //     );
+      //     eoaHolders = [];
+
+      //     await lpArray.forEach((element) => {
+      //       if (element["is_contract"] == 0) {
+      //         eoaHolders.push(element["address"]);
+      //       } else {
+      //         contractHolders.push(element["address"]);
+      //       }
+      //     });
+      //     console.log("LP HOLDER PUSHED");
+      //     console.log(eoaHolders[2], "EOA HOLDER", base_address);
+      //   }
+      // }
+      // else if (eoaHolders.length === 0 && ownerBalane !== "0") {
+      //   eoaHolders.push(ownerHolder);
     }
+  }
+
+  // To Do: Write a function for => Give 2 arrays and get the unlike elements as a result
+
+  if (copyAddress !== undefined) {
+    console.log("COPY ADDRESS IS NOT UNDEFINED");
+    console.log(copyAddress);
+    console.log(eoaHolders);
+    eoaHolders = eoaHolders.filter((item) => !copyAddress.includes(item));
+    console.log(eoaHolders);
   }
 
   // console.log(eoaHolders, "EOAholderArray");
   // console.log(contractHolders, "ContractholderArray");
   // console.log(addressHolders['data']['result'], "addressHolders");
-  if (eoaHolders.length == 0) {
-    console.log("No EOA holders found");
-    return false;
-  } else {
-    // Add the code snippet of tokenHolderChecker and send address to create a single ganacheConnection and a TokenDetails class
-
-    return { eoaHolders, dexArray };
-  }
+  // if (eoaHolders.length === 0) {
+  //   console.log("No EOA holders found");
+  //   return false;
+  // } else {
+  // Add the code snippet of tokenHolderChecker and send address to create a single ganacheConnection and a TokenDetails class
+  console.log(dexArray, "dexArray");
+  return { eoaHolders, dexArray };
 };
 
 module.exports = { addresses };

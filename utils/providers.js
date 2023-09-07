@@ -15,7 +15,7 @@ const eth = new web3(
 );
 
 const polygon = new web3(
-  "https://rpc-mainnet.maticvigil.com/"
+  "https://rpc.ankr.com/polygon/7906078e674202ad67a7d9560d1ee305a91251a9e95a6046dbaeb7e64d2023bd"
 );
 
 module.exports = { bsc, eth, polygon };

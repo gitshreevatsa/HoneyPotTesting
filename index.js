@@ -1,7 +1,7 @@
 const express = require("express");
 const NodeCache = require("node-cache");
 const app = express();
-const port = 3000;
+const port = 3001;
 const cache = new NodeCache();
 
 const { ganacheConnection } = require("./ganache");
@@ -17,7 +17,7 @@ const { reChecker } = require("./utils/balanceRechecker");
 
 const dexCollection = {
   1: "UniswapV2",
-  56: "PancakeSwapV2",
+  56: "PancakeV2",
   137: "QuickSwap",
 };
 
@@ -34,6 +34,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/:id/:chain", async (req, res) => {
+  let taxCalc;
   if (!supportedChains.includes(req.params.chain)) {
     res.status(400).json({
       error: ["Unsupported Chain ID"],
@@ -54,9 +55,8 @@ app.get("/:id/:chain", async (req, res) => {
     console.log(baseAddressHolders, "baseAddressHolders");
 
     if (
-      baseAddressHolders == false ||
-      baseAddressHolders.dexArray == undefined ||
-      baseAddressHolders.dexArray.length == 0
+      baseAddressHolders.dexArray === undefined ||
+      baseAddressHolders.dexArray.length === 0
     ) {
       res.json({
         error: ["No dex found"],
@@ -65,22 +65,33 @@ app.get("/:id/:chain", async (req, res) => {
         sell_tax: "",
         pair: "",
       });
-    } else {
+    }else if(baseAddressHolders.eoaHolders.length === 0){
+      res.json({
+        error: ["No EOA holders found"],
+        isHoneyPot: -1,
+        buy_tax: undefined,
+        sell_tax: undefined,
+        dex: dexCollection[req.params.chain],
+      });
+    }
+
+    else {
       console.log(baseAddressHolders.dexArray[0], "PAIR CONTRACT");
       const tokens = await getRouter(
         baseAddressHolders.dexArray[0],
         req.params.chain
       );
 
-      console.log(tokens, "tokens");
-
+      console.log(tokens.tokens[1], "tokens");
+      console.log(req.params.id, "req.params.id");
       // Uniswap V2 Pair caller function , then proceed with quoteTokenHolders addresses
 
       // let quoteAddressHolders;
-      if(tokens.tokens[1] == req.params.id){
-        tokens.tokens = [tokens.tokens[1], tokens.tokens[0]]
+      if (tokens.tokens[1] === req.params.id.toLowerCase()) {
+        tokens.tokens = [tokens.tokens[1], tokens.tokens[0]];
       }
 
+      console.log(tokens, "CHANGED ////////////////////////////////////////");
       const quoteAddressHolders = await addresses(
         tokens.tokens[1],
         req.params.chain,
@@ -145,7 +156,7 @@ app.get("/:id/:chain", async (req, res) => {
             tokenHoldersArray,
             "tokenHoldersArray ++++++++++++++++++++++++++++++++++++++++++++++++++++++"
           );
-            // tokenHoldersArray.quote_address_holder = '0xb452f7f5297f951b3b890159e288607145bc0759'
+          // tokenHoldersArray.quote_address_holder = '0xb452f7f5297f951b3b890159e288607145bc0759'
           const ganacheConnect = await ganacheConnection(
             req.params.chain,
             tokenHoldersArray.base_address_holder,
@@ -153,7 +164,7 @@ app.get("/:id/:chain", async (req, res) => {
           );
           console.log(
             "ganache connection ready ///////////////////////////////////////////////////",
-            await ganacheConnect.web3.eth.getBlockNumber()
+            // await ganacheConnect.web3.eth.getBlockNumber()
           );
           console.time("timer_start");
           await funding(
@@ -224,83 +235,111 @@ app.get("/:id/:chain", async (req, res) => {
             console.time(
               "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!UNISWAP INTERACTION : "
             );
-            const taxCalc = await tokenTax(
-              ganacheConnect.web3,
-              ganacheConnect.swapRouterContract,
-              tokens.tokens[0],
-              tokens.tokens[1],
-              tokenHoldersArray.base_address_holder,
-              tokenHoldersArray.quote_address_holder,
-              1,
-              true,
-              300000,
-              1000000000,
-              tokenHoldersArray,
-              token0,
-              token1
-            );
-            console.timeEnd(
-              "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!UNISWAP INTERACTION : "
-            );
+            try {
+              taxCalc = await tokenTax(
+                ganacheConnect.web3,
+                ganacheConnect.swapRouterContract,
+                tokens.tokens[0],
+                tokens.tokens[1],
+                tokenHoldersArray.base_address_holder,
+                tokenHoldersArray.quote_address_holder,
+                1,
+                true,
+                300000,
+                1000000000,
+                tokenHoldersArray,
+                token0,
+                token1
+              );
+              console.timeEnd(
+                "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!UNISWAP INTERACTION : "
+              );
 
-            console.log(taxCalc, "taxCalc");
+              console.log(taxCalc, "taxCalc");
 
-            if (
-              taxCalc.buyTaxPercentage == undefined ||
-              taxCalc.sellTaxPercentage == undefined ||
-              // taxCalc.approve_error == undefined ||
-              taxCalc.sellTaxPercentage > 60 ||
-              taxCalc.buyTaxPercentage > 60
-            ) {
-              isHoneyPot = 1;
-              error = "HIGH TAX";
-            } else {
-              isHoneyPot = 0;
+              if (
+                taxCalc.buyTaxPercentage == undefined ||
+                taxCalc.sellTaxPercentage == undefined ||
+                // taxCalc.approve_error == undefined ||
+                taxCalc.sellTaxPercentage > 60 ||
+                taxCalc.buyTaxPercentage > 60
+              ) {
+                isHoneyPot = 1;
+                error = "HIGH TAX";
+              } else {
+                isHoneyPot = 0;
+              }
+
+              if (taxCalc.approve_error != undefined) {
+                isHoneyPot = 1;
+                error = "APPROVE FAILED";
+              }
+
+              if (
+                taxCalc.buy_tax_error !== undefined ||
+                taxCalc.sell_tax_error !== undefined ||
+                taxCalc.approve_error !== undefined
+              ) {
+                error = "Transfer Failed";
+                isHoneyPot = 1;
+              }
+
+              if (taxCalc.buyTax > 60) {
+                isHoneyPot = 1;
+                buy_tax_error = "High Buy Tax";
+                error = "High Buy Tax";
+              }
+
+              if (taxCalc.sell_tax > 60) {
+                isHoneyPot = 1;
+                sell_tax_error = "High Sell Tax";
+                error = "High Sell Tax";
+              }
+
+              if (
+                taxCalc.buyTaxPercentage != undefined &&
+                taxCalc.sellTaxPercentage != undefined
+              ) {
+                buy_tax = Math.round(taxCalc.buyTaxPercentage);
+                sell_tax = Math.round(taxCalc.sellTaxPercentage);
+              }
+
+              if (taxCalc.buyTaxPercentage < 0) {
+                buy_tax = 0;
+              }
+              if (taxCalc.sellTaxPercentage < 0) {
+                sell_tax = 0;
+              }
+
+              if (
+                (taxCalc.buyTaxPercentage = 0 && taxCalc.sellTaxPercentage == 0)
+              ) {
+                isHoneyPot = 0;
+              }
+
+              res.status(200).json({
+                buy_tax: sell_tax | undefined,
+                sell_tax: buy_tax | undefined,
+                transfer_tax: ((buy_tax + sell_tax) / 2) | undefined,
+                isHoneyPot: isHoneyPot,
+                isHoneyPotReason: [error],
+                dex: dexCollection[req.params.chain],
+                pair: [token0.tokenName, token1.tokenName],
+              });
+            } catch (e) {
+              e = e.toString() || e.split(":")[2].trim() + ": " + e.split(":")[3].trim();
+
+              res.json({
+                timestamp : Date.now(),
+                buy_tax: undefined,
+                sell_tax: undefined,
+                transfer_tax: undefined,
+                isHoneyPot: 1,
+                isHoneyPotReason: [e],
+                dex: dexCollection[req.params.chain],
+                pair: [token0.tokenName, token1.tokenName],
+              })
             }
-
-            if (taxCalc.approve_error != undefined) {
-              isHoneyPot = 1;
-              error = "APPROVE FAILED";
-            }
-
-            if (
-              taxCalc.buy_tax_error !== undefined ||
-              taxCalc.sell_tax_error !== undefined ||
-              taxCalc.approve_error !== undefined
-            ) {
-              error = "Transfer Failed";
-              isHoneyPot = 1;
-            }
-
-            if (taxCalc.buyTax > 60) {
-              isHoneyPot = 1;
-              buy_tax_error = "High Buy Tax";
-              error = "High Buy Tax";
-            }
-
-            if (taxCalc.sell_tax > 60) {
-              isHoneyPot = 1;
-              sell_tax_error = "High Sell Tax";
-              error = "High Sell Tax";
-            }
-
-            if (
-              taxCalc.buyTaxPercentage != undefined &&
-              taxCalc.sellTaxPercentage != undefined
-            ) {
-              buy_tax = Math.round(taxCalc.buyTaxPercentage);
-              sell_tax = Math.round(taxCalc.sellTaxPercentage);
-            }
-
-            res.status(200).json({
-              buy_tax: sell_tax | undefined,
-              sell_tax: buy_tax | undefined,
-              transfer_tax: ((buy_tax + sell_tax) / 2) | undefined,
-              isHoneyPot: isHoneyPot,
-              isHoneyPotReason: [error],
-              dex: dexCollection[req.params.chain],
-              pair: [token0.tokenName, token1.tokenName],
-            });
           }
         }
       }

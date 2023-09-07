@@ -85,6 +85,9 @@ const tokenTax = async (
   );
 
   let buy_tax_error, sell_tax_error, approve_error;
+  
+  console.log(await web3.eth.getBalance(buy_account), "buy account balance");
+  console.log(await web3.eth.getBalance(sell_account), "sell account balance");
 
   try {
     await quote_token.methods
@@ -93,12 +96,14 @@ const tokenTax = async (
         await quote_token.methods.balanceOf(sell_account).call()
       )
       .send({ from: sell_account });
+    console.log("approved quote token from", sell_account);
     await base_token.methods
       .approve(
         routerContract._address,
         await base_token.methods.balanceOf(buy_account).call()
       )
       .send({ from: buy_account });
+    console.log("approved base token from", buy_account);
   } catch (err) {
     console.log("error in approving quote token");
     console.log(err);
@@ -158,6 +163,10 @@ const tokenTax = async (
   }
 
   buyTax = (uniswap_price[1] - receivedAmount) / uniswap_price[1];
+  console.log("Buy Tax", buyTax);
+  if (isNaN(buyTax)) {
+    buyTax = 1;
+  }
 
   console.log(uniswap_price);
 
@@ -233,7 +242,7 @@ const tokenTax = async (
     );
 
     sell_tax = (uniswap_price[1] - recieved_Base_Amount) / uniswap_price[1];
-
+    if (isNaN(sell_tax)) sell_tax = 1;
     console.log("sell tax", sell_tax);
     sellTaxPercentage = sell_tax * 100;
     console.log("sell tax percentage", sellTaxPercentage);
@@ -251,7 +260,6 @@ const tokenTax = async (
   return {
     buyTaxPercentage,
     sellTaxPercentage,
-    approve_error,
     buy_tax_error,
     sell_tax_error,
     // transferReturn,

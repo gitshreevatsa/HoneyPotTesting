@@ -7,8 +7,8 @@ const ganache = require("ganache");
 
 const networkOptions = {
   56: "https://thrilling-green-dawn.bsc.discover.quiknode.pro/bfa1dcba97e594cf960398bee14d82229ccd57b9/",
-  1: "https://multi-dimensional-glitter.discover.quiknode.pro/fa76eedb7480f2b9b29497d2b1c04a2414dbdd3b/",
-  137: "https://fittest-dimensional-silence.matic.quiknode.pro/5941ed9461b6451cd2b294212d3090b7a098514a/",
+  1: "https://eth-mainnet.g.alchemy.com/v2/P8Pv2-iOZ3VJu0eoBV9lQX7yJ4HLnJbd",
+  137: "https://solemn-palpable-arrow.matic.discover.quiknode.pro/534b0e6432ecb15aa2a951f048855fdcd58d6358/",
 };
 
 const routerContract = {
@@ -48,21 +48,27 @@ const ganacheConnection = async (network, buy_account, sell_account) => {
   let web3;
   let swapRouterContract;
   try {
+    console.log(networkOptions[network]);
     ganacheProvider = ganache.provider(options);
     web3 = new Web3(ganacheProvider);
-
+    console.log("Connected to ganache network");
     swapRouterContract = new web3.eth.Contract(
       require("./abi/uniswap.json").abi,
       routerContract[network]
     );
+    console.log("Connected to swap router contract");
   } catch (e) {
     console.log(e);
     console.log("Error in connecting to ganache network");
     console.log(buy_account, sell_account, "--------------------------------");
   }
-
+  console.log(web3);
   return { web3, swapRouterContract };
 };
 //Connect the routers to providers based on network taken from GoPlus
 
 module.exports = { ganacheConnection };
+
+
+// 0xf977814e90da44bfa03b6295a0616a897441acec
+// 0x8eb8a3b98659cce290402893d0123abb75e3ab28
